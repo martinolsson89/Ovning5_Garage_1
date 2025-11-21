@@ -13,4 +13,8 @@ public class Boat : Vehicle
         Type = type;
         Lenght = length;
     }
+    public override string ToString()
+    {
+        return $"Vehical: {nameof(Boat)} Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}, Length: {Lenght} m, Type: {Type}";
+    }
 }

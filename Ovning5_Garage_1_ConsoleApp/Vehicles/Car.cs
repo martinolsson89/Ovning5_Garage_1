@@ -14,4 +14,9 @@ public class Car : Vehicle
         NumberOfDoors = numberOfDoors;
         Type = type;
     }
+
+    public override string ToString()
+    {
+        return $"Vehical: {nameof(Car)} Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}, Nr of doors: {NumberOfDoors}, Type: {Type}";
+    }
 }

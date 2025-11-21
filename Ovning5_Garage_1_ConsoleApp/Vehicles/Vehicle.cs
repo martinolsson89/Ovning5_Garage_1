@@ -20,6 +20,11 @@ public abstract class Vehicle
         FuelType = fuelType;
     }
 
+    public override string ToString()
+    {
+        return $"Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}";
+    }
+
     private static string GetRegNr()
     {
         const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVW";

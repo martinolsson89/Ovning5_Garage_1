@@ -13,4 +13,9 @@ public class Bus : Vehicle
         NumberOfSeats = numberOfSeats;
         IsDoubleDecker = isDoubleDecker;
     }
+
+    public override string ToString()
+    {
+        return $"Vehical: {nameof(Bus)} Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}, Nr of seats: {NumberOfSeats}, Doubledecker: {IsDoubleDecker}";
+    }
 }

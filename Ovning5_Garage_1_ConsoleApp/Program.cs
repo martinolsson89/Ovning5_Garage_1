@@ -3,11 +3,20 @@ using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
 
 var car = new Car(color: "red", wheels: 4, fueltype: FuelType.Gasoline, type: CarType.Sedan, numberOfDoors: 4);
-var car1 = new Car(color: "blue", wheels: 4, fueltype: FuelType.Diesel, type: CarType.Suv, numberOfDoors: 4);
-var car2 = new Car(color: "orange", wheels: 4, fueltype: FuelType.Gasoline, type: CarType.Van, numberOfDoors: 6);
-var car3 = new Car(color: "yellow", wheels: 4, fueltype: FuelType.Electric, type: CarType.SportsCar, numberOfDoors: 2);
+var boat = new Boat(color: "white", wheels: 0, fueltype: FuelType.Gasoline, type: BoatType.Motorboat, length: 12);
+var bus = new Bus(color: "yellow", wheels: 4, fueltype: FuelType.Diesel, numberOfSeats: 22, isDoubleDecker: false);
+var motorcycle = new Motorcycle(color: "green", wheels: 2, fueltype: FuelType.Electric, type: MotorcycleType.Sport, engineDisplacement: 110);
 
-Console.WriteLine($"{car.RegistrationNumber},  {car.Color}, {car.Wheels}, {car.FuelType}, {car.Type}, {car.NumberOfDoors}");
-Console.WriteLine($"{car1.RegistrationNumber},  {car1.Color}, {car1.Wheels}, {car1.FuelType}, {car1.Type}, {car1.NumberOfDoors}");
-Console.WriteLine($"{car2.RegistrationNumber},  {car2.Color}, {car2.Wheels}, {car2.FuelType}, {car2.Type}, {car2.NumberOfDoors}");
-Console.WriteLine($"{car3.RegistrationNumber},  {car3.Color}, {car3.Wheels}, {car3.FuelType}, {car3.Type}, {car3.NumberOfDoors}");
+var garage = new Garage<Vehicle>(4);
+
+garage.Park(car);
+garage.Park(boat);
+garage.Park(bus);
+garage.Park(motorcycle);
+
+foreach(var item in garage)
+{
+    Console.WriteLine(item);
+}
+
+

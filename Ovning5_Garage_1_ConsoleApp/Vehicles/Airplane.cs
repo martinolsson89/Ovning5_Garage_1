@@ -14,4 +14,9 @@ public class Airplane : Vehicle
         Engines = engines;
         Wingspan = wingspan;
     }
+
+    public override string ToString()
+    {
+        return $"Vehical: {nameof(Airplane)} Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}, Engines: {Engines}, Wingspan: {Wingspan}";
+    }
 }
