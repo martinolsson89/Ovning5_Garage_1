@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-
+﻿using Ovning5_Garage_1_ConsoleApp;
 using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
 
