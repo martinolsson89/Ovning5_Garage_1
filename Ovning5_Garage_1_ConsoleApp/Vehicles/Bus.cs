@@ -16,6 +16,6 @@ public class Bus : Vehicle
 
     public override string ToString()
     {
-        return $"Vehical: {nameof(Bus)} Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}, Nr of seats: {NumberOfSeats}, Doubledecker: {IsDoubleDecker}";
+        return $"Vehical: {nameof(Bus)}, Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}, Nr of seats: {NumberOfSeats}, Doubledecker: {IsDoubleDecker}";
     }
 }

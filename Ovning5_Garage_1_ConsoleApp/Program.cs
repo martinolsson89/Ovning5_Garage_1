@@ -1,22 +1,25 @@
-﻿using Ovning5_Garage_1_ConsoleApp;
-using Ovning5_Garage_1_ConsoleApp.Enums;
-using Ovning5_Garage_1_ConsoleApp.Vehicles;
+﻿using Ovning5_Garage_1_ConsoleApp.Interfaces;
+using Ovning5_Garage_1_ConsoleApp.UI;
 
-var car = new Car(color: "red", wheels: 4, fueltype: FuelType.Gasoline, type: CarType.Sedan, numberOfDoors: 4);
-var boat = new Boat(color: "white", wheels: 0, fueltype: FuelType.Gasoline, type: BoatType.Motorboat, length: 12);
-var bus = new Bus(color: "yellow", wheels: 4, fueltype: FuelType.Diesel, numberOfSeats: 22, isDoubleDecker: false);
-var motorcycle = new Motorcycle(color: "green", wheels: 2, fueltype: FuelType.Electric, type: MotorcycleType.Sport, engineDisplacement: 110);
+IUI ui = new ConsoleUI();
+int capacity = AskForCapacity(ui);
 
-var garage = new Garage<Vehicle>(4);
+var handler = new Handler(capacity);
+var manager = new Manager(ui, handler);
 
-garage.Park(car);
-garage.Park(boat);
-garage.Park(bus);
+manager.Run();
 
-
-foreach(var item in garage)
+static int AskForCapacity(IUI ui)
 {
-    Console.WriteLine(item);
+    while (true)
+    {
+        var input = ui.ReadInput("Enter garage capacity (number of parking slots): ");
+
+        if (int.TryParse(input, out int capacity) && capacity > 0)
+        {
+            return capacity;
+        }
+
+        ui.ShowMessage("Invalid capacity, please enter a positive integer.");
+    }
 }
-
-

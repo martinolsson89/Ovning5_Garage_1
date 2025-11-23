@@ -80,6 +80,14 @@ public class Garage<T> : IEnumerable<T> where T : Vehicle
         return false;
     }
 
+    public Dictionary<string, int> GetVehicleTypeCount()
+    {
+        return _vehicles
+            .Where(t => t != null)
+            .GroupBy(t => t!.GetType().Name)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+
 
 
     public IEnumerator<T> GetEnumerator()
