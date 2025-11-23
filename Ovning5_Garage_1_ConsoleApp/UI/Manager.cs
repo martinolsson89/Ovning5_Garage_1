@@ -15,7 +15,7 @@ public class Manager
 
     public void Run()
     {
-        _handler.SeedGarage(); // Remove later
+        //_handler.SeedGarage();
 
         bool running = true;
         while (running)
@@ -30,6 +30,7 @@ public class Manager
                     break;
 
                 case "2":
+                    SeedVehicles();
                     break;
 
                 case "3":
@@ -44,6 +45,19 @@ public class Manager
                     _ui.ShowMessage("Invalid choice, try again.");
                     break;
             }
+        }
+    }
+
+    private void SeedVehicles()
+    {
+        var IsSeedSuccessful = _handler.SeedGarage();
+        if (!IsSeedSuccessful)
+        {
+            _ui.ShowMessage("\nSeed was not successful, garage maybe full");
+        }
+        else
+        {
+            _ui.ShowMessage("\nSeed was successfull, garage is now populated with vehicles");
         }
     }
 
@@ -76,10 +90,17 @@ public class Manager
     {
         var vehicles = _handler.GetAllVehicles();
 
-        _ui.ShowMessage("\nVehicles in garage:");
-        foreach (var v in vehicles)
+        if(vehicles.Count() == 0)
         {
-            _ui.ShowMessage(v.ToString());
+            _ui.ShowMessage("\nGarage is empty");
+        }
+        else
+        {
+            _ui.ShowMessage("\nVehicles in garage:");
+            foreach (var v in vehicles)
+            {
+                _ui.ShowMessage(v.ToString());
+            }
         }
     }
 
@@ -87,11 +108,17 @@ public class Manager
     {
         var counts = _handler.GetVehicleTypeCount();
 
-        _ui.ShowMessage("\nVehicles types in garage:");
-        foreach (var kvp in counts)
+        if(counts.Count() == 0)
         {
-            _ui.ShowMessage($"{kvp.Key}: {kvp.Value}");
+            _ui.ShowMessage("\nGarage is empty");
         }
-
+        else
+        {
+            _ui.ShowMessage("\nVehicles types in garage:");
+            foreach (var kvp in counts)
+            {
+                _ui.ShowMessage($"{kvp.Key}: {kvp.Value}");
+            }
+        }
     }
 }

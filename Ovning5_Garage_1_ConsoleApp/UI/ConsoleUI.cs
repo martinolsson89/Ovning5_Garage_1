@@ -15,8 +15,9 @@ public class ConsoleUI : IUI
         Console.WriteLine();
         Console.WriteLine("=== Garage Menu ===");
         Console.WriteLine("1. List parked vehicles");
-        Console.WriteLine("2. Park new vehicle");
-        Console.WriteLine("3. Remove vehicle");
+        Console.WriteLine("2. Seed vehicles");
+        Console.WriteLine("3. Park new vehicle");
+        Console.WriteLine("4. Remove vehicle");
         Console.WriteLine("0. Exit");
         Console.Write("Choose an option: ");
     }
