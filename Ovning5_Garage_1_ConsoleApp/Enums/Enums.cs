@@ -34,3 +34,10 @@ public enum BoatType
     FishingBoat
 }
 
+public enum ParkResult
+{
+    Success,
+    AlreadyInGarage,
+    GarageIsFull
+}
+

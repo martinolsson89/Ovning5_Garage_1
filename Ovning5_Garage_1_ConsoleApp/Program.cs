@@ -12,7 +12,7 @@ var garage = new Garage<Vehicle>(4);
 garage.Park(car);
 garage.Park(boat);
 garage.Park(bus);
-garage.Park(motorcycle);
+
 
 foreach(var item in garage)
 {

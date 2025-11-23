@@ -1,14 +1,15 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Vehicles;
+﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+using Ovning5_Garage_1_ConsoleApp.Vehicles;
 using System.Collections;
-using System.Numerics;
 
 namespace Ovning5_Garage_1_ConsoleApp;
 
 public class Garage<T> : IEnumerable<T> where T : Vehicle
 {
-    private T[] _vehicles;
+    private T?[] _vehicles;
 
     public int Capacity => _vehicles.Length;
+    public int Count { get; private set; }
 
     public Garage(int capacity)
     {
@@ -21,30 +22,74 @@ public class Garage<T> : IEnumerable<T> where T : Vehicle
         _vehicles = new T[capacity];
     }
 
-    public (bool parked, T? parkedVehicle) Park(T vehicle)
+    public (ParkResult, T? parkedVehicle) Park(T vehicle)
     {
         if(vehicle == null)
         {
             throw new ArgumentNullException(nameof(vehicle));
         }
 
+        int firstFreeIndex = -1;
+
         for (int i = 0; i < _vehicles.Length; i++)
         {
-            if (_vehicles[i] is null)
+            var current = _vehicles[i];
+
+            // Is the vehicle already parked in the garage ?
+            if(current is not null && current.RegistrationNumber == vehicle.RegistrationNumber)
             {
-                _vehicles[i] = vehicle;
-                return (parked: true,parkedVehicle: _vehicles[i]);
+                return (ParkResult.AlreadyInGarage, parkedVehicle: null);
+            }
+
+            // Save first free parking spot
+            if(current is null && firstFreeIndex == -1)
+            {
+                firstFreeIndex = i;
             }
         }
 
-        return (parked: false, parkedVehicle:null);
+        // Add vehicle to garage
+        if(firstFreeIndex != -1)
+        {
+            _vehicles[firstFreeIndex] = vehicle;
+            Count++;
+            return (ParkResult.Success, parkedVehicle: _vehicles[firstFreeIndex]);
+        }
+
+        return (ParkResult.GarageIsFull, parkedVehicle:null);
     }
+
+    public bool Remove(string regNr)
+    {
+        if (string.IsNullOrWhiteSpace(regNr))
+        {
+            throw new ArgumentException(nameof(regNr), "Registration number is required");
+        }
+
+        for (int i = 0; i < _vehicles.Length; i++)
+        {
+            var v = _vehicles[i];
+            if (v is not null && v.RegistrationNumber == regNr)
+            {
+                _vehicles[i] = null;
+                Count--;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
 
     public IEnumerator<T> GetEnumerator()
     {
-        foreach (T v in _vehicles)
+        foreach (T? v in _vehicles)
         {
-            yield return v;
+            if (v is not null)
+            {
+                yield return v;
+            }
         }
     }
 
