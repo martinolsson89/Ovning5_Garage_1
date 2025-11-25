@@ -17,6 +17,16 @@ public class Handler : IHandler
         return _garage;
     }
 
+    public Vehicle? GetVehicleByRegNr(string regNr)
+    {
+        return _garage.GetVehicleByRegNr(regNr);
+    }
+
+    public IEnumerable<Vehicle> GetVehicles(Func<Vehicle, bool> predicate)
+    {
+         return _garage.GetVehicles(predicate);
+    }
+
     public Dictionary<string, int> GetVehicleTypeCount()
     {
         return _garage.GetVehicleTypeCount();

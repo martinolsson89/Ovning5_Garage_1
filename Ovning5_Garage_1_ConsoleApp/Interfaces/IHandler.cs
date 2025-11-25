@@ -11,4 +11,6 @@ public interface IHandler
     bool RemoveVehicle(string registrationNumber);
     Dictionary<string, int> GetVehicleTypeCount();
     IEnumerable<Vehicle> GetAllVehicles();
+    Vehicle? GetVehicleByRegNr(string regNr);
+    IEnumerable<Vehicle> GetVehicles(Func<Vehicle, bool> predicate);
 }

@@ -22,6 +22,22 @@ public class Garage<T> : IEnumerable<T> where T : Vehicle
         _vehicles = new T[capacity];
     }
 
+    public IEnumerable<T> GetVehicles(Func<T, bool> predicate)
+    {
+        foreach(var vehicle in _vehicles)
+        {
+            if(vehicle is not null && predicate(vehicle))
+            {
+                yield return vehicle;
+            }
+        }
+    }
+
+    public Vehicle? GetVehicleByRegNr(string regNr)
+    {
+        return _vehicles.FirstOrDefault(v => v?.RegistrationNumber.ToLower() == regNr.ToLower());
+    }
+
     public (ParkResult, T? parkedVehicle) Park(T vehicle)
     {
         if(vehicle == null)

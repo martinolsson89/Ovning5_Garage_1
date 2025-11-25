@@ -19,6 +19,8 @@ public class ConsoleUI : IUI
         Console.WriteLine("2. Seed vehicles");
         Console.WriteLine("3. Park new vehicle");
         Console.WriteLine("4. Remove vehicle");
+        Console.WriteLine("5. Find vehicle by registration number");
+        Console.WriteLine("6. Find vehicles by properties");
         Console.WriteLine("0. Exit");
         Console.Write("Choose an option: ");
     }

@@ -43,6 +43,14 @@ public class Manager
                     RemoveVehicle();
                     break;
 
+                case "5":
+                    FindVehicleByRegNr();
+                    break;
+
+                case "6":
+                FindVehiclebyProp();
+                break;
+
                 case "0":
                     running = false;
                     break;
@@ -51,6 +59,94 @@ public class Manager
                     _ui.ShowMessage("Invalid choice, try again.");
                     break;
             }
+        }
+    }
+
+    private void FindVehiclebyProp()
+    {
+        _ui.ShowMessage("\n=== Search Vehicles by Properties ===");
+        _ui.ShowMessage("Enter search criteria (leave blank to skip):");
+
+        var color = _ui.ReadInput("Color: ");
+        var wheelsInput = _ui.ReadInput("Number of wheels: ");
+        var fuelTypeInput = _ui.ReadInput("Fuel type (1=Gasoline, 2=Diesel, 3=Electric, 4=Hybrid, 5=None): ");
+        var vehicleType = _ui.ReadInput("Vehicle type (Car/Motorcycle/Bus/Boat/Airplane): ");
+
+        // Parse input
+        int? wheels = string.IsNullOrWhiteSpace(wheelsInput) ? null : int.Parse(wheelsInput);
+        FuelType? fuelType = ParseFuelType(fuelTypeInput);
+
+        // Build search predicate
+        var results = _handler.GetVehicles(v =>
+        {
+            bool matches = true;
+
+            if (!string.IsNullOrWhiteSpace(color))
+            {
+                matches &= v.Color.Equals(color, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (wheels.HasValue)
+            {
+                matches &= v.Wheels == wheels.Value;
+            }
+
+            if (fuelType.HasValue)
+            {
+                matches &= v.FuelType == fuelType.Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(vehicleType))
+            {
+                matches &= v.GetType().Name.Equals(vehicleType, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return matches;
+        });
+
+        //var vehicleList = results.ToList();
+
+        if (results.Count() == 0)
+        {
+            _ui.ShowMessage("\nNo vehicles found matching the criteria.");
+        }
+        else
+        {
+            _ui.ShowMessage($"\nFound {results.Count()} vehicle(s):");
+            foreach (var vehicle in results)
+            {
+                _ui.ShowMessage(vehicle.ToString());
+            }
+        }
+    }
+
+    private FuelType? ParseFuelType(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+
+        return input switch
+        {
+            "1" => FuelType.Gasoline,
+            "2" => FuelType.Diesel,
+            "3" => FuelType.Electric,
+            "4" => FuelType.Hybrid,
+            "5" => FuelType.None,
+            _ => null
+        };
+    }
+
+    private void FindVehicleByRegNr()
+    {
+        var reg = _ui.ReadInput("Enter registration number: ");
+        var res = _handler.GetVehicleByRegNr(reg);
+
+        if (res is null)
+        {
+            _ui.ShowMessage("Vehicle was not found.");
+        }
+        else
+        {
+            _ui.ShowMessage($"{res}");
         }
     }
 
