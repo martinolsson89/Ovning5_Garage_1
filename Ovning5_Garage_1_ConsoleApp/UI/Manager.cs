@@ -17,7 +17,6 @@ public class Manager
 
     public void Run()
     {
-        //_handler.SeedGarage();
 
         bool running = true;
         while (running)
@@ -48,8 +47,8 @@ public class Manager
                     break;
 
                 case "6":
-                FindVehiclebyProp();
-                break;
+                    FindVehiclebyProp();
+                    break;
 
                 case "0":
                     running = false;
@@ -76,35 +75,8 @@ public class Manager
         int? wheels = string.IsNullOrWhiteSpace(wheelsInput) ? null : int.Parse(wheelsInput);
         FuelType? fuelType = ParseFuelType(fuelTypeInput);
 
-        // Build search predicate
-        var results = _handler.GetVehicles(v =>
-        {
-            bool matches = true;
+        var results = _handler.GetVehicles(color, wheels, fuelType, vehicleType);
 
-            if (!string.IsNullOrWhiteSpace(color))
-            {
-                matches &= v.Color.Equals(color, StringComparison.OrdinalIgnoreCase);
-            }
-
-            if (wheels.HasValue)
-            {
-                matches &= v.Wheels == wheels.Value;
-            }
-
-            if (fuelType.HasValue)
-            {
-                matches &= v.FuelType == fuelType.Value;
-            }
-
-            if (!string.IsNullOrWhiteSpace(vehicleType))
-            {
-                matches &= v.GetType().Name.Equals(vehicleType, StringComparison.OrdinalIgnoreCase);
-            }
-
-            return matches;
-        });
-
-        //var vehicleList = results.ToList();
 
         if (results.Count() == 0)
         {
@@ -118,21 +90,6 @@ public class Manager
                 _ui.ShowMessage(vehicle.ToString());
             }
         }
-    }
-
-    private FuelType? ParseFuelType(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return null;
-
-        return input switch
-        {
-            "1" => FuelType.Gasoline,
-            "2" => FuelType.Diesel,
-            "3" => FuelType.Electric,
-            "4" => FuelType.Hybrid,
-            "5" => FuelType.None,
-            _ => null
-        };
     }
 
     private void FindVehicleByRegNr()
@@ -170,28 +127,12 @@ public class Manager
         while (true)
         {
             _ui.ShowAddVehicleSubMenu();
-            var typeChoice = _ui.ReadInput("Select menu option: ");
-            var color = _ui.ReadInput("Enter color: ");
+            var typeChoice = _ui.ReadUserInput("Select menu option: ");
+            var color = _ui.ReadUserInput("Enter color: ");
             var wheels = _ui.ReadInt("Enter number of wheels: ");
             var fuelType = AskFuelType();
 
-            Vehicle? vehicle = typeChoice switch
-            {
-                "1" => new Car(color, wheels, fuelType, 4, CarType.Suv),
-                "2" => new Motorcycle(color, wheels, fuelType, MotorcycleType.Chopper, 150),
-                "3" => new Bus(color, wheels, fuelType, 22, false),
-                "4" => new Boat(color, wheels, fuelType, BoatType.FishingBoat, 14),
-                "5" => new Airplane(color, wheels, fuelType, 2, 16),
-                _ => null
-            };
-
-            if(vehicle is null)
-            {
-                _ui.ShowMessage("Invalid vehicle type, cancelling.");
-                return;
-            }
-
-           var (result, parkedVehicle) = _handler.ParkVehicle(vehicle);
+            var(result, parkedVehicle) = _handler.ParkVehicle(typeChoice, color, wheels, fuelType);
 
             switch (result)
             {
@@ -212,32 +153,7 @@ public class Manager
         }
     }
 
-    private FuelType AskFuelType()
-    {
-        while (true)
-        {
-            _ui.ShowMessage("\nChoose fuel type:");
-            _ui.ShowMessage("1. Gasoline");
-            _ui.ShowMessage("2. Diesel");
-            _ui.ShowMessage("3. Electric");
-            _ui.ShowMessage("4. Hybrid");
-            _ui.ShowMessage("5. None");
 
-            var input = _ui.ReadInput("Enter choice (1–5): ");
-
-            var fuel = input switch
-            {
-                "1" => FuelType.Gasoline,
-                "2" => FuelType.Diesel,
-                "3" => FuelType.Electric,
-                "4" => FuelType.Hybrid,
-                "5" => FuelType.None,
-                _ => default
-            };
-
-            if (fuel != default) return fuel;
-        }
-    }
 
     private void SeedVehicles()
     {
@@ -287,7 +203,7 @@ public class Manager
         }
         else
         {
-            _ui.ShowMessage("\nVehicles in garage:");
+            _ui.ShowMessage($"\nVehicles in garage ({vehicles.Count()}):");
             foreach (var v in vehicles)
             {
                 _ui.ShowMessage(v.ToString());
@@ -311,5 +227,41 @@ public class Manager
                 _ui.ShowMessage($"{kvp.Key}: {kvp.Value}");
             }
         }
+    }
+
+    // Helper methods
+
+    private FuelType AskFuelType()
+    {
+        while (true)
+        {
+            _ui.ShowMessage("\nChoose fuel type:");
+            _ui.ShowMessage("1. Gasoline");
+            _ui.ShowMessage("2. Diesel");
+            _ui.ShowMessage("3. Electric");
+            _ui.ShowMessage("4. Hybrid");
+            _ui.ShowMessage("5. None");
+
+            var input = _ui.ReadInput("Enter choice (1–5): ");
+
+            var fuel = ParseFuelType(input);
+
+            if (fuel != null) return (FuelType)fuel;
+        }
+    }
+
+    private FuelType? ParseFuelType(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+
+        return input switch
+        {
+            "1" => FuelType.Gasoline,
+            "2" => FuelType.Diesel,
+            "3" => FuelType.Electric,
+            "4" => FuelType.Hybrid,
+            "5" => FuelType.None,
+            _ => null
+        };
     }
 }

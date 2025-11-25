@@ -11,6 +11,20 @@ public class ConsoleUI : IUI
         return Console.ReadLine() ?? string.Empty;
     }
 
+    public string ReadUserInput(string prompt)
+    {
+        while (true)
+        {
+            Console.Write(prompt);
+            var input = Console.ReadLine();
+            if (!string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+            Console.WriteLine("Input can't be empty");
+        }
+    }
+
     public void ShowMenu()
     {
         Console.WriteLine();

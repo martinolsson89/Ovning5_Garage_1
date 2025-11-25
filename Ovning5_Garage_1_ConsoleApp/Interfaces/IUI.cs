@@ -10,4 +10,5 @@ public interface IUI
     void ShowAddVehicleSubMenu();
     string ReadInput(string prompt);
     int ReadInt (string prompt);
+    string ReadUserInput(string prompt);
 }

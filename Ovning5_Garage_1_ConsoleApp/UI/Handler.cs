@@ -1,6 +1,8 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Microsoft.VisualBasic.FileIO;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Interfaces;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
+using System.Reflection.Metadata;
 
 namespace Ovning5_Garage_1_ConsoleApp.UI;
 
@@ -16,15 +18,43 @@ public class Handler : IHandler
     {
         return _garage;
     }
+    public IEnumerable<Vehicle> GetVehicles(string? color, int? wheels, FuelType? fuelType, string? vehicleType)
+    {
+        // Build search predicate
+        var results = _garage.GetVehicles(v =>
+        {
+            bool matches = true;
+
+            if (!string.IsNullOrWhiteSpace(color))
+            {
+                matches &= v.Color.Equals(color, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (wheels.HasValue)
+            {
+                matches &= v.Wheels == wheels.Value;
+            }
+
+            if (fuelType.HasValue)
+            {
+                matches &= v.FuelType == fuelType.Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(vehicleType))
+            {
+                matches &= v.GetType().Name.Equals(vehicleType, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return matches;
+        });
+
+        return results;
+
+    }
 
     public Vehicle? GetVehicleByRegNr(string regNr)
     {
         return _garage.GetVehicleByRegNr(regNr);
-    }
-
-    public IEnumerable<Vehicle> GetVehicles(Func<Vehicle, bool> predicate)
-    {
-         return _garage.GetVehicles(predicate);
     }
 
     public Dictionary<string, int> GetVehicleTypeCount()
@@ -32,8 +62,23 @@ public class Handler : IHandler
         return _garage.GetVehicleTypeCount();
     }
 
-    public (ParkResult, Vehicle? parkedVehicle) ParkVehicle(Vehicle vehicle)
+    public (ParkResult, Vehicle? parkedVehicle) ParkVehicle(string typeChoice, string color, int wheels, FuelType fuelType)
     {
+        Vehicle? vehicle = typeChoice switch
+        {
+            "1" => new Car(color, wheels, fuelType, 4, CarType.Suv),
+            "2" => new Motorcycle(color, wheels, fuelType, MotorcycleType.Chopper, 150),
+            "3" => new Bus(color, wheels, fuelType, 22, false),
+            "4" => new Boat(color, wheels, fuelType, BoatType.FishingBoat, 14),
+            "5" => new Airplane(color, wheels, fuelType, 2, 16),
+            _ => null
+        };
+
+        if (vehicle is null)
+        {
+            throw new ArgumentNullException(nameof(vehicle));
+        }
+
         return _garage.Park(vehicle);
     }
 
