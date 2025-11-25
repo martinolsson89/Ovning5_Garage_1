@@ -1,4 +1,5 @@
 ﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+using Ovning5_Garage_1_ConsoleApp.Interfaces;
 using Ovning5_Garage_1_ConsoleApp.Services;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
 using System.Collections;
@@ -6,7 +7,7 @@ using System.Collections;
 namespace Ovning5_Garage_1_ConsoleApp;
 
 // Generic garage class that can store any type of vehicle
-public class Garage<T> : IEnumerable<T> where T : Vehicle
+public class Garage<T> : IGarage<T>, IEnumerable<T> where T : Vehicle
 {
     private T?[] _vehicles; // Internal array to store vehicles with nullable slots for empty spaces
     private readonly RegistrationNumberGenerator _regNumberGenerator;

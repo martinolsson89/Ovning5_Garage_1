@@ -8,16 +8,13 @@ namespace Ovning5_Garage_1_ConsoleApp.Services;
 
 public class Handler : IHandler
 {
-    private readonly Garage<Vehicle> _garage;
+    private readonly IGarage<Vehicle> _garage;
     public Handler(int capacity)
     {
         _garage = new Garage<Vehicle>(capacity);
     }
 
-    public IEnumerable<Vehicle> GetAllVehicles()
-    {
-        return _garage;
-    }
+    public IEnumerable<Vehicle> GetAllVehicles() => _garage;
     public IEnumerable<Vehicle> GetVehicles(string? vehicleTypeChoice, string? color, int? wheels, FuelType? fuelType)
     {
         string? vehicleType = GetVehicleType(vehicleTypeChoice);
