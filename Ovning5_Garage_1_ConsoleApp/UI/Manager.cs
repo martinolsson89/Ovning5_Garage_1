@@ -39,6 +39,10 @@ public class Manager
                     AddVehicle();
                     break;
 
+                case "4":
+                    RemoveVehicle();
+                    break;
+
                 case "0":
                     running = false;
                     break;
@@ -47,6 +51,21 @@ public class Manager
                     _ui.ShowMessage("Invalid choice, try again.");
                     break;
             }
+        }
+    }
+
+    private void RemoveVehicle()
+    {
+        var regNr = _ui.ReadInput("\nEnter Reg Number to remove vehicle: ");
+        var result = _handler.RemoveVehicle(regNr);
+
+        if (result)
+        {
+            _ui.ShowMessage($"Vehicle with {regNr} was successfully removed from garage!");
+        }
+        else
+        {
+            _ui.ShowMessage($"Vehicle with {regNr} was not found in the garage");
         }
     }
 

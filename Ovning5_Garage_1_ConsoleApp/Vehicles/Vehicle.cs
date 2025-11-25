@@ -20,6 +20,11 @@ public abstract class Vehicle
         FuelType = fuelType;
     }
 
+    internal static void ReleaseRegistrationNumber(string regNr)
+    {
+        _usedRegistrationNumbers.Remove(regNr);
+    }
+
     public override string ToString()
     {
         return $"Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}";

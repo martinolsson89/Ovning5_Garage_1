@@ -69,8 +69,9 @@ public class Garage<T> : IEnumerable<T> where T : Vehicle
         for (int i = 0; i < _vehicles.Length; i++)
         {
             var v = _vehicles[i];
-            if (v is not null && v.RegistrationNumber == regNr)
+            if (v is not null && v.RegistrationNumber.ToLower() == regNr.ToLower())
             {
+                Vehicle.ReleaseRegistrationNumber(v.RegistrationNumber);
                 _vehicles[i] = null;
                 Count--;
                 return true;
