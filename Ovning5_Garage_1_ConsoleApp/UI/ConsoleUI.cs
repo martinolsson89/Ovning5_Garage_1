@@ -15,11 +15,10 @@ public class ConsoleUI : IUI
     {
         while (true)
         {
-            Console.Write(prompt);
-            var input = Console.ReadLine();
-            if (!string.IsNullOrEmpty(input))
+            var res = ReadInput(prompt);
+            if (!string.IsNullOrEmpty(res))
             {
-                return input;
+                return res;
             }
             Console.WriteLine("Input can't be empty");
         }
@@ -55,7 +54,7 @@ public class ConsoleUI : IUI
     public void ShowAddVehicleSubMenu()
     {
         Console.WriteLine();
-        Console.WriteLine("=== Add vehicle ===");
+        Console.WriteLine("=== Vehicles ===");
         Console.WriteLine("Choose vehicle type:");
         Console.WriteLine("1. Car");
         Console.WriteLine("2. Motorcykle");
@@ -71,7 +70,7 @@ public class ConsoleUI : IUI
         {
             var s = ReadInput(prompt);
             if (int.TryParse(s, out var value))
-            if(value >= 0)
+                if (value >= 0)
                 {
                     return value;
                 }
@@ -79,4 +78,22 @@ public class ConsoleUI : IUI
             Console.WriteLine("Write a positive integer");
         }
     }
+
+    public int ReadIntInRange(string prompt, int min, int max)
+    {
+        while (true)
+        {
+            var s = ReadInput(prompt);
+            if (int.TryParse(s, out var value))
+            {
+                if (value >= min && value <= max)
+                {
+                    return value;
+                }
+            }
+
+            Console.WriteLine($"Please enter a number between {min} and {max}");
+        }
+    }
+
 }

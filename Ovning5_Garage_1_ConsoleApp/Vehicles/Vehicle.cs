@@ -9,62 +9,26 @@ public abstract class Vehicle
     public int Wheels { get; protected set; }
     public FuelType FuelType { get; protected set; }
 
-    private static readonly Random _random = new();
-    private static readonly HashSet<string> _usedRegistrationNumbers = new(); // HashSet is static so its belongs to the class and not the instance
-
-    protected Vehicle(string color, int wheels, FuelType fuelType)
+    protected Vehicle(string registrationNumber, string color, int wheels, FuelType fuelType)
     {
-        RegistrationNumber = GetRegNr();
+        if (string.IsNullOrWhiteSpace(registrationNumber))
+            throw new ArgumentException("Registration number cannot be empty.", nameof(registrationNumber));
+
+        RegistrationNumber = registrationNumber;
         Color = color;
         Wheels = wheels;
         FuelType = fuelType;
     }
 
-    internal static void ReleaseRegistrationNumber(string regNr)
-    {
-        _usedRegistrationNumbers.Remove(regNr);
-    }
-
     public override string ToString()
     {
-        return $"Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}";
+        return string.Format(
+            "Reg: {0,-12}  Color: {1,-8}  Wheels: {2,-6}  FuelType: {3,-10}",
+            RegistrationNumber,
+            Color,
+            Wheels,
+            FuelType
+        );
     }
 
-    private static string GetRegNr()
-    {
-        const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVW";
-
-        // calling generate random reg number method and checking that it is unique.
-        while (true)
-        {
-            var regNr = GenerateRandomRegNr(alphabet);
-
-            if (_usedRegistrationNumbers.Add(regNr))
-                return regNr; // HashSet.Add will return false if it already exist and the loop will continue.
-        }
-    }
-
-    // Generateing random reg number
-    private static string GenerateRandomRegNr(string alphabet)
-    {
-        var randomRegNr = "";
-
-        for (int i = 0; i < 6; i++)
-        {
-            if (i < 3)
-            {
-                // generating a random letter from alphabet
-                var index = _random.Next(alphabet.Length);
-                randomRegNr += alphabet[index];
-            }
-            else
-            {
-                // generating a random number between 0-9
-                randomRegNr += $"{_random.Next(0, 10)}";
-            }
-        }
-
-        return randomRegNr;
-
-    }
 }

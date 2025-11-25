@@ -6,8 +6,8 @@ public class Motorcycle : Vehicle
 {
     public MotorcycleType Type { get; }
     public int EngineDisplacement { get; }
-    public Motorcycle(string color, int wheels, FuelType fueltype, MotorcycleType type, int engineDisplacement)
-        : base(color, wheels, fueltype)
+    public Motorcycle(string registrationNumber, string color, int wheels, FuelType fueltype, MotorcycleType type, int engineDisplacement)
+        : base(registrationNumber, color, wheels, fueltype)
     {
         Type = type;
         EngineDisplacement = engineDisplacement;
@@ -15,6 +15,15 @@ public class Motorcycle : Vehicle
 
     public override string ToString()
     {
-        return $"Vehical: {nameof(Motorcycle)}, Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}, Engine Displacement: {EngineDisplacement}, Type: {Type}";
+        return string.Format(
+            "Vehicle: {0,-10} Reg: {1,-8} Color: {2,-8} Wheels: {3,-4} FuelType: {4,-10} Engine: {5,-7} Type: {6,-10}",
+            nameof(Motorcycle),
+            RegistrationNumber,
+            Color,
+            Wheels,
+            FuelType,
+            $"{EngineDisplacement} cc",
+            Type
+        );
     }
 }

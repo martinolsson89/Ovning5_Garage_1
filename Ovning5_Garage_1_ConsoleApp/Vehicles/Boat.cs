@@ -7,14 +7,23 @@ public class Boat : Vehicle
     public BoatType Type { get; }
     public int Lenght { get; }
 
-    public Boat(string color, int wheels, FuelType fueltype, BoatType type, int length)
-        : base(color, wheels, fueltype)
+    public Boat(string registrationNumber, string color, int wheels, FuelType fueltype, BoatType type, int length)
+        : base(registrationNumber, color, wheels, fueltype)
     {
         Type = type;
         Lenght = length;
     }
     public override string ToString()
     {
-        return $"Vehical: {nameof(Boat)}, Reg: {RegistrationNumber}, Color: {Color}, Wheels: {Wheels}, FuelType: {FuelType}, Length: {Lenght} m, Type: {Type}";
+        return string.Format(
+            "Vehicle: {0,-10} Reg: {1,-8} Color: {2,-8} Wheels: {3,-4} FuelType: {4,-10} Length: {5,-7} Type: {6,-10}",
+            nameof(Boat),
+            RegistrationNumber,
+            Color,
+            Wheels,
+            FuelType,
+            $"{ Lenght} m",
+            Type
+        );
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Interfaces;
-using Ovning5_Garage_1_ConsoleApp.Vehicles;
 
 namespace Ovning5_Garage_1_ConsoleApp.UI;
 
@@ -66,16 +65,18 @@ public class Manager
         _ui.ShowMessage("\n=== Search Vehicles by Properties ===");
         _ui.ShowMessage("Enter search criteria (leave blank to skip):");
 
+        _ui.ShowAddVehicleSubMenu();
+        var vehicleType = _ui.ReadInput("Select menu option: ");
         var color = _ui.ReadInput("Color: ");
         var wheelsInput = _ui.ReadInput("Number of wheels: ");
         var fuelTypeInput = _ui.ReadInput("Fuel type (1=Gasoline, 2=Diesel, 3=Electric, 4=Hybrid, 5=None): ");
-        var vehicleType = _ui.ReadInput("Vehicle type (Car/Motorcycle/Bus/Boat/Airplane): ");
+
 
         // Parse input
         int? wheels = string.IsNullOrWhiteSpace(wheelsInput) ? null : int.Parse(wheelsInput);
         FuelType? fuelType = ParseFuelType(fuelTypeInput);
 
-        var results = _handler.GetVehicles(color, wheels, fuelType, vehicleType);
+        var results = _handler.GetVehicles(vehicleType, color, wheels, fuelType);
 
 
         if (results.Count() == 0)
@@ -114,11 +115,11 @@ public class Manager
 
         if (result)
         {
-            _ui.ShowMessage($"Vehicle with {regNr} was successfully removed from garage!");
+            _ui.ShowMessage($"Vehicle with {regNr.ToUpper()} was successfully removed from garage!");
         }
         else
         {
-            _ui.ShowMessage($"Vehicle with {regNr} was not found in the garage");
+            _ui.ShowMessage($"Vehicle with {regNr.ToUpper()} was not found in the garage");
         }
     }
 
@@ -127,7 +128,7 @@ public class Manager
         while (true)
         {
             _ui.ShowAddVehicleSubMenu();
-            var typeChoice = _ui.ReadUserInput("Select menu option: ");
+            var typeChoice = _ui.ReadIntInRange("Select menu option: ", 1, 5);
             var color = _ui.ReadUserInput("Enter color: ");
             var wheels = _ui.ReadInt("Enter number of wheels: ");
             var fuelType = AskFuelType();

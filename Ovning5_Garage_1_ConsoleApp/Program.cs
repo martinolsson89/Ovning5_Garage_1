@@ -1,11 +1,12 @@
 ﻿using Ovning5_Garage_1_ConsoleApp.Interfaces;
+using Ovning5_Garage_1_ConsoleApp.Services;
 using Ovning5_Garage_1_ConsoleApp.UI;
 
 IUI ui = new ConsoleUI();
 int capacity = AskForCapacity(ui);
 
-var handler = new Handler(capacity);
-var manager = new Manager(ui, handler);
+IHandler handler = new Handler(capacity);
+Manager manager = new Manager(ui, handler);
 
 manager.Run();
 
