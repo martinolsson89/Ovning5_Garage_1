@@ -10,7 +10,7 @@ public abstract class Vehicle
     public FuelType FuelType { get; protected set; }
 
     private static readonly Random _random = new();
-    private static readonly HashSet<string> _usedRegistrationNumbers = new();
+    private static readonly HashSet<string> _usedRegistrationNumbers = new(); // HashSet is static so its belongs to the class and not the instance
 
     protected Vehicle(string color, int wheels, FuelType fuelType)
     {
