@@ -20,6 +20,7 @@ public class ConsoleUI : IUI
             {
                 return res;
             }
+            // Keep asking until valid input is provided
             Console.WriteLine("Input can't be empty");
         }
     }
@@ -61,7 +62,6 @@ public class ConsoleUI : IUI
         Console.WriteLine("3. Bus");
         Console.WriteLine("4. Boat");
         Console.WriteLine("5. Airplane");
-        Console.Write("Choose an option: ");
     }
 
     public int ReadInt(string prompt)
@@ -75,6 +75,7 @@ public class ConsoleUI : IUI
                     return value;
                 }
 
+            // Keep asking until valid positive integer is provided
             Console.WriteLine("Write a positive integer");
         }
     }
@@ -86,6 +87,7 @@ public class ConsoleUI : IUI
             var s = ReadInput(prompt);
             if (int.TryParse(s, out var value))
             {
+                // Validate that value is within the specified range
                 if (value >= min && value <= max)
                 {
                     return value;
@@ -96,4 +98,19 @@ public class ConsoleUI : IUI
         }
     }
 
+    public int AskForCapacity()
+    {
+        while (true)
+        {
+            var input = ReadInput("Enter garage capacity (number of parking slots): ");
+
+            // Validate capacity is a positive integer
+            if (int.TryParse(input, out int capacity) && capacity > 0)
+            {
+                return capacity;
+            }
+
+            ShowMessage("Invalid capacity, please enter a positive integer.");
+        }
+    }
 }

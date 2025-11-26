@@ -2,25 +2,25 @@
 using Ovning5_Garage_1_ConsoleApp.Services;
 using Ovning5_Garage_1_ConsoleApp.UI;
 
-IUI ui = new ConsoleUI();
-int capacity = AskForCapacity(ui);
-
-IHandler handler = new Handler(capacity);
-Manager manager = new Manager(ui, handler);
-
-manager.Run();
-
-static int AskForCapacity(IUI ui)
+try
 {
-    while (true)
-    {
-        var input = ui.ReadInput("Enter garage capacity (number of parking slots): ");
+    // Initialize the console UI
+    IUI ui = new ConsoleUI();
 
-        if (int.TryParse(input, out int capacity) && capacity > 0)
-        {
-            return capacity;
-        }
+    // Ask user for garage capacity before creating the garage
+    int capacity = ui.AskForCapacity();
 
-        ui.ShowMessage("Invalid capacity, please enter a positive integer.");
-    }
+    // Create handler with the specified capacity for the garage
+    IHandler handler = new Handler(capacity);
+
+    // Initialize the manager that coordinates UI and business logic
+    Manager manager = new Manager(ui, handler);
+
+    // Start the main application loop
+    manager.Run();
+}
+catch(Exception ex)
+{
+    Console.WriteLine($"\nA critical error occurred: {ex.Message}");
+    Console.WriteLine("The application will now exit.");
 }
