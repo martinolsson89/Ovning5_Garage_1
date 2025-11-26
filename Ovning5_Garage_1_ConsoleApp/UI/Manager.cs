@@ -115,11 +115,11 @@ public class Manager
 
         if (result)
         {
-            _ui.ShowMessage($"Vehicle with {regNr.ToUpper()} was successfully removed from garage!");
+            _ui.ShowMessage($"\nVehicle with {regNr.ToUpper()} was successfully removed from garage!");
         }
         else
         {
-            _ui.ShowMessage($"Vehicle with {regNr.ToUpper()} was not found in the garage");
+            _ui.ShowMessage($"\nVehicle with {regNr.ToUpper()} was not found in the garage");
         }
     }
 
@@ -139,15 +139,15 @@ public class Manager
             {
                 case ParkResult.Success:
                     _ui.ShowMessage(
-                        $"Vehicle parked successfully. Reg: {parkedVehicle!.RegistrationNumber}");
+                        $"\nVehicle parked successfully. Reg: {parkedVehicle!.RegistrationNumber}");
                     break;
 
                 case ParkResult.AlreadyInGarage:
-                    _ui.ShowMessage("That vehicle is already parked in the garage.");
+                    _ui.ShowMessage("\nThat vehicle is already parked in the garage.");
                     break;
 
                 case ParkResult.GarageIsFull:
-                    _ui.ShowMessage("Garage is full. Could not park vehicle.");
+                    _ui.ShowMessage("\nGarage is full. Could not park vehicle.");
                     break;
             }
             return;
@@ -158,14 +158,30 @@ public class Manager
 
     private void SeedVehicles()
     {
-        var IsSeedSuccessful = _handler.SeedGarage();
-        if (!IsSeedSuccessful)
+        _ui.ShowMessage("\n=== Seed Vehicles ===");
+        _ui.ShowMessage($"Available spots in garage: {_handler.GetAvailableSpots()}");
+
+        int requested = _ui.ReadInt("\nHow many vehicles do you want to seed? ");
+        var result = _handler.SeedGarage(requested);
+
+        if (!result.Success)
         {
-            _ui.ShowMessage("\nSeed was not successful, garage maybe full");
+            if (result.AvailableSpots <= 0)
+                _ui.ShowMessage("\nGarage is full, could not seed more vehicles.");
+            else
+                _ui.ShowMessage("\nNo vehicles where seeded.");
         }
         else
         {
-            _ui.ShowMessage("\nSeed was successfull, garage is now populated with vehicles");
+            if (result.SeededCount < result.RequestedCount)
+            {
+                _ui.ShowMessage(
+                    $"\nSeeded {result.SeededCount} vehicles (you asked for {result.RequestedCount}, but was only {result.AvailableSpots} free spots in garage).");
+            }
+            else
+            {
+                _ui.ShowMessage($"\nSeeded {result.SeededCount} vehicles.");
+            }
         }
     }
 

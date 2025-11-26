@@ -1,6 +1,7 @@
 ﻿using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Interfaces;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
+using System;
 
 
 
@@ -9,9 +10,15 @@ namespace Ovning5_Garage_1_ConsoleApp.Services;
 public class Handler : IHandler
 {
     private readonly IGarage<Vehicle> _garage;
+    private readonly Random _random = new();
     public Handler(int capacity)
     {
         _garage = new Garage<Vehicle>(capacity);
+    }
+
+    public int GetAvailableSpots()
+    {
+        return _garage.Capacity - _garage.Count;
     }
 
     public IEnumerable<Vehicle> GetAllVehicles() => _garage;
@@ -84,77 +91,105 @@ public class Handler : IHandler
         return _garage.Remove(registrationNumber);
     }
 
-    public bool SeedGarage()
+    public (bool Success, int SeededCount, int RequestedCount, int AvailableSpots) SeedGarage(int requestedCount)
     {
-        var garageCapacity = _garage.Capacity;
-        var garageCount = _garage.Count;
-        var NrOfSeed = garageCapacity - garageCount;
+        var availableSpots = _garage.Capacity - _garage.Count;
 
-        if (NrOfSeed == 0)
+        if (requestedCount <= 0 || availableSpots <= 0)
         {
-            return false;
+            return (false, 0, requestedCount, availableSpots);
         }
 
-        var seedList = GenerateVehicles();
+        // Limit the number of vehicles to the available space
+        var toCreate = Math.Min(requestedCount, availableSpots);
 
-        if (NrOfSeed < 10)
+        var vehiclesToSeed = GenerateVehicles(toCreate);
+        var seeded = 0;
+
+        foreach (var v in vehiclesToSeed)
         {
-            for (int i = 0; i < NrOfSeed; i++)
+            (ParkResult parked, Vehicle? pk) = _garage.Park(v);
+            if(parked == ParkResult.Success)
             {
-                (ParkResult parked, Vehicle? parkedVehicle) = _garage.Park(seedList[i]);
-                if (parked != ParkResult.Success)
-                {
-                    return false;
-                }
-            }
-        }
-        else
-        {
-            foreach (var seed in seedList)
-            {
-                (ParkResult parked, Vehicle? parkedVehicle) = _garage.Park(seed);
-                if (parked != ParkResult.Success)
-                {
-                    return false;
-                }
+                seeded++;
             }
         }
 
-        return true;
+        return (seeded > 0, seeded, requestedCount, availableSpots);
     }
 
     // Helper methods
 
-    private List<Vehicle> GenerateVehicles()
+    private IEnumerable<Vehicle> GenerateVehicles(int count)
     {
-        List<Vehicle> seed = new List<Vehicle>();
-
-        var car = new Car(registrationNumber: _garage.GenerateRegistrationNumber(), color: "Red", wheels: 4, fueltype: FuelType.Hybrid, numberOfDoors: 4, type: CarType.Suv);
-        var car1 = new Car(_garage.GenerateRegistrationNumber(), color: "Blue", wheels: 4, fueltype: FuelType.Electric, numberOfDoors: 2, type: CarType.SportsCar);
-        var mc = new Motorcycle(_garage.GenerateRegistrationNumber(), color: "Green", wheels: 2, fueltype: FuelType.Gasoline, type: MotorcycleType.Sport, engineDisplacement: 110);
-        var mc1 = new Motorcycle(_garage.GenerateRegistrationNumber(), color: "Black", wheels: 2, fueltype: FuelType.Hybrid, type: MotorcycleType.Cruiser, engineDisplacement: 120);
-        var bus = new Bus(_garage.GenerateRegistrationNumber(), color: "Yellow", wheels: 4, fueltype: FuelType.Diesel, numberOfSeats: 20, isDoubleDecker: false);
-        var bus1 = new Bus(_garage.GenerateRegistrationNumber(), color: "Red", wheels: 4, fueltype: FuelType.Gasoline, numberOfSeats: 18, isDoubleDecker: false);
-        var boat = new Boat(_garage.GenerateRegistrationNumber(), color: "White", wheels: 0, fueltype: FuelType.None, type: BoatType.Sailboat, length: 12);
-        var boat1 = new Boat(_garage.GenerateRegistrationNumber(), color: "Orange", wheels: 0, fueltype: FuelType.Gasoline, type: BoatType.Motorboat, length: 8);
-        var plane = new Airplane(_garage.GenerateRegistrationNumber(), color: "Black", wheels: 2, fueltype: FuelType.Gasoline, engines: 2, wingspan: 20);
-        var plane1 = new Airplane(_garage.GenerateRegistrationNumber(), color: "White", wheels: 4, fueltype: FuelType.Hybrid, engines: 4, wingspan: 32);
-
-        seed.AddRange(car, mc, bus, boat, plane, car1, mc1, bus1, boat1, plane1);
-
-        return seed;
+        for (int i = 0; i < count; i++)
+        {
+            yield return GenerateRandomVehicle();
+        }
     }
+    private Vehicle GenerateRandomVehicle()
+    {
+        var vehicleType = _random.Next(0, 5);
 
+        switch (vehicleType)
+        {
+            case 0:
+                return new Car(
+                    registrationNumber: _garage.GenerateRegistrationNumber(),
+                    color: GetRandomColor(),
+                    wheels: 4,
+                    fueltype: GetRandomFuel(),
+                    numberOfDoors: _random.Next(2, 5),
+                    type: GetRandomCarType());
+
+            case 1:
+                return new Motorcycle(
+                    registrationNumber: _garage.GenerateRegistrationNumber(),
+                    color: GetRandomColor(),
+                    wheels: 2,
+                    fueltype: GetRandomFuel(),
+                    type: GetRandomMotorcycleType(),
+                    engineDisplacement: _random.Next(50, 1300));
+
+            case 2:
+                return new Bus(
+                    registrationNumber: _garage.GenerateRegistrationNumber(),
+                    color: GetRandomColor(),
+                    wheels: 4,
+                    fueltype: FuelType.Diesel,
+                    numberOfSeats: _random.Next(10, 60),
+                    isDoubleDecker: _random.Next(0, 2) == 1);
+
+            case 3:
+                return new Boat(
+                    registrationNumber: _garage.GenerateRegistrationNumber(),
+                    color: GetRandomColor(),
+                    wheels: 0,
+                    fueltype: FuelType.None,
+                    type: GetRandomBoatType(),
+                    length: _random.Next(5, 40));
+
+            case 4:
+            default:
+                return new Airplane(
+                    registrationNumber: _garage.GenerateRegistrationNumber(),
+                    color: GetRandomColor(),
+                    wheels: _random.Next(2, 9),
+                    fueltype: FuelType.Gasoline,
+                    engines: _random.Next(1, 5),
+                    wingspan: _random.Next(10, 60));
+        }
+    }
     private Vehicle? CreateVehicleType(int typeVehicle, string color, int wheels, FuelType fuelType)
     {
 
             Vehicle? vehicle = typeVehicle switch
             {
-                1 => new Car(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, 4, CarType.Suv),
-                2 => new Motorcycle(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, MotorcycleType.Chopper, 150),
-                3 => new Bus(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, 22, false),
-                4 => new Boat(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, BoatType.FishingBoat, 14),
-                5 => new Airplane(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, 2, 16),
+                1 => new Car(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, numberOfDoors: _random.Next(2, 5), GetRandomCarType()),
+                2 => new Motorcycle(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, GetRandomMotorcycleType(), _random.Next(50, 1300)),
+                3 => new Bus(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, _random.Next(10, 60), _random.Next(0, 2) == 1),
+                4 => new Boat(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, GetRandomBoatType(), _random.Next(5, 40)),
+                5 => new Airplane(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, _random.Next(1, 5), _random.Next(10, 60)),
                 _ => null
             };
 
@@ -176,5 +211,30 @@ public class Handler : IHandler
         return vehicleType;
     }
 
+    private string GetRandomColor()
+    {
+        string[] colors = { "Red", "Blue", "Green", "Black", "White", "Yellow", "Pink" };
+        return colors[_random.Next(colors.Length)];
+    }
 
+    private FuelType GetRandomFuel()
+    {
+        FuelType[] fuels = { FuelType.Gasoline, FuelType.Diesel, FuelType.Hybrid, FuelType.Electric, FuelType.None };
+        return fuels[_random.Next(fuels.Length)];
+    }
+    private CarType GetRandomCarType()
+    {
+        CarType[] carTypes = { CarType.Sedan, CarType.Van, CarType.SportsCar, CarType.Suv };
+        return carTypes[_random.Next(carTypes.Length)];
+    }
+    private MotorcycleType GetRandomMotorcycleType()
+    {
+        MotorcycleType[] motorcycleTypes = { MotorcycleType.Motocross, MotorcycleType.Cruiser, MotorcycleType.Chopper, MotorcycleType.Sport };
+        return motorcycleTypes[_random.Next(motorcycleTypes.Length)];
+    }
+    private BoatType GetRandomBoatType()
+    {
+        BoatType[] boatTypes = { BoatType.Sailboat, BoatType.Motorboat, BoatType.Yacht, BoatType.FishingBoat };
+        return boatTypes[_random.Next(boatTypes.Length)];
+    }
 }

@@ -6,7 +6,8 @@ namespace Ovning5_Garage_1_ConsoleApp.Interfaces;
 
 public interface IHandler
 {
-    bool SeedGarage();
+    int GetAvailableSpots();
+    (bool Success, int SeededCount, int RequestedCount, int AvailableSpots) SeedGarage(int requestedCount);
     (ParkResult, Vehicle? parkedVehicle) ParkVehicle(int vehicleType, string color, int wheels, FuelType fuelType);
     bool RemoveVehicle(string registrationNumber);
     Dictionary<string, int> GetVehicleTypeCount();
