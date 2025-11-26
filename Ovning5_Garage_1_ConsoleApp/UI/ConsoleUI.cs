@@ -5,26 +5,6 @@ namespace Ovning5_Garage_1_ConsoleApp.UI;
 
 public class ConsoleUI : IUI
 {
-    public string ReadInput(string prompt)
-    {
-        Console.Write(prompt);
-        return Console.ReadLine() ?? string.Empty;
-    }
-
-    public string ReadUserInput(string prompt)
-    {
-        while (true)
-        {
-            var res = ReadInput(prompt);
-            if (!string.IsNullOrEmpty(res))
-            {
-                return res;
-            }
-            // Keep asking until valid input is provided
-            Console.WriteLine("Input can't be empty");
-        }
-    }
-
     public void ShowMenu()
     {
         Console.WriteLine();
@@ -47,10 +27,6 @@ public class ConsoleUI : IUI
         Console.WriteLine("2. List vehicle parked types");
     }
 
-    public void ShowMessage(string message)
-    {
-        Console.WriteLine(message);
-    }
 
     public void ShowAddVehicleSubMenu()
     {
@@ -62,6 +38,41 @@ public class ConsoleUI : IUI
         Console.WriteLine("3. Bus");
         Console.WriteLine("4. Boat");
         Console.WriteLine("5. Airplane");
+    }
+
+    public void ShowFuelTypeMenu()
+    {
+        Console.WriteLine("\nChoose fuel type:");
+        Console.WriteLine("1. Gasoline");
+        Console.WriteLine("2. Diesel");
+        Console.WriteLine("3. Electric");
+        Console.WriteLine("4. Hybrid");
+        Console.WriteLine("5. None");
+    }
+
+    public void ShowMessage(string message)
+    {
+        Console.WriteLine(message);
+    }
+
+    public string ReadInput(string prompt)
+    {
+        Console.Write(prompt);
+        return Console.ReadLine() ?? string.Empty;
+    }
+
+    public string ReadUserInput(string prompt)
+    {
+        while (true)
+        {
+            var res = ReadInput(prompt);
+            if (!string.IsNullOrEmpty(res))
+            {
+                return res;
+            }
+            // Keep asking until valid input is provided
+            Console.WriteLine("Input can't be empty");
+        }
     }
 
     public int ReadInt(string prompt)
@@ -112,15 +123,5 @@ public class ConsoleUI : IUI
 
             ShowMessage("Invalid capacity, please enter a positive integer.");
         }
-    }
-
-    public void ShowFuelTypeMenu()
-    {
-        Console.WriteLine("\nChoose fuel type:");
-        Console.WriteLine("1. Gasoline");
-        Console.WriteLine("2. Diesel");
-        Console.WriteLine("3. Electric");
-        Console.WriteLine("4. Hybrid");
-        Console.WriteLine("5. None");
     }
 }

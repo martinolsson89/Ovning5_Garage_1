@@ -8,10 +8,11 @@ public interface IUI
     void ShowMenu();
     void ShowVehiclesSubMenu();
     void ShowAddVehicleSubMenu();
-    string ReadInput(string prompt);
-    int ReadInt (string prompt);
-    string ReadUserInput(string prompt);
-    int ReadIntInRange(string prompt, int min, int max);
     void ShowFuelTypeMenu();
+    string ReadInput(string prompt);
+    string ReadUserInput(string prompt);
+    int ReadInt (string prompt);
+    int ReadIntInRange(string prompt, int min, int max);
+
 
 }
