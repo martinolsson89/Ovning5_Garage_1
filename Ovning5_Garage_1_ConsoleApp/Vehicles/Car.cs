@@ -10,6 +10,8 @@ public class Car : Vehicle
     public Car(string registrationNumber, string color, int wheels, FuelType fueltype, int numberOfDoors, CarType type)
         : base(registrationNumber, color, wheels, fueltype)
     {
+        if (numberOfDoors <= 0)
+            throw new ArgumentOutOfRangeException(nameof(numberOfDoors), "Number of doors must be greater than zero.");
         NumberOfDoors = numberOfDoors;
         Type = type;
     }

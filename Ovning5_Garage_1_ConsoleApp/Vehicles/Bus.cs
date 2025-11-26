@@ -9,6 +9,8 @@ public class Bus : Vehicle
     public Bus(string registrationNumber, string color, int wheels, FuelType fueltype, int numberOfSeats, bool isDoubleDecker)
         : base(registrationNumber, color, wheels, fueltype)
     {
+        if (numberOfSeats <= 0)
+            throw new ArgumentOutOfRangeException(nameof(numberOfSeats), "Number of seats must be greater than zero.");
         NumberOfSeats = numberOfSeats;
         IsDoubleDecker = isDoubleDecker;
     }

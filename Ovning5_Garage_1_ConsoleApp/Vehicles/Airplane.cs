@@ -10,6 +10,10 @@ public class Airplane : Vehicle
     public Airplane(string registrationNumber, string color, int wheels, FuelType fueltype, int engines, int wingspan)
         : base(registrationNumber, color, wheels, fueltype)
     {
+        if (engines <= 0)
+            throw new ArgumentOutOfRangeException(nameof(engines), "Number of engines must be greater than zero.");
+        if (wingspan <= 0)
+            throw new ArgumentOutOfRangeException(nameof(wingspan), "Wingspan must be greater than zero.");
         Engines = engines;
         Wingspan = wingspan;
     }

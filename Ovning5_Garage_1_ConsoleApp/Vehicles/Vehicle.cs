@@ -13,6 +13,8 @@ public abstract class Vehicle
     {
         if (string.IsNullOrWhiteSpace(registrationNumber))
             throw new ArgumentException("Registration number cannot be empty.", nameof(registrationNumber));
+        if (wheels < 0)
+            throw new ArgumentOutOfRangeException(nameof(wheels), "Number of wheels cannot be negative.");
 
         RegistrationNumber = registrationNumber;
         Color = color;

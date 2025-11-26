@@ -113,4 +113,14 @@ public class ConsoleUI : IUI
             ShowMessage("Invalid capacity, please enter a positive integer.");
         }
     }
+
+    public void ShowFuelTypeMenu()
+    {
+        Console.WriteLine("\nChoose fuel type:");
+        Console.WriteLine("1. Gasoline");
+        Console.WriteLine("2. Diesel");
+        Console.WriteLine("3. Electric");
+        Console.WriteLine("4. Hybrid");
+        Console.WriteLine("5. None");
+    }
 }

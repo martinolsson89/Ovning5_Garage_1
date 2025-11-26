@@ -12,5 +12,6 @@ public interface IUI
     int ReadInt (string prompt);
     string ReadUserInput(string prompt);
     int ReadIntInRange(string prompt, int min, int max);
+    void ShowFuelTypeMenu();
 
 }

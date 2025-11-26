@@ -5,8 +5,8 @@ namespace Ovning5_Garage_1_ConsoleApp.UI;
 
 public class Manager
 {
-    private IUI _ui;
-    private IHandler _handler;
+    private readonly IUI _ui;
+    private readonly IHandler _handler;
 
     public Manager(IUI ui, IHandler handler)
     {
@@ -46,7 +46,7 @@ public class Manager
                     break;
 
                 case "6":
-                    FindVehiclebyProp();
+                    FindVehicleByProp();
                     break;
 
                 case "0":
@@ -60,7 +60,7 @@ public class Manager
         }
     }
 
-    private void FindVehiclebyProp()
+    private void FindVehicleByProp()
     {
         _ui.ShowMessage("\n=== Search Vehicles by Properties ===");
         _ui.ShowMessage("Enter search criteria (leave blank to skip):");
@@ -70,28 +70,28 @@ public class Manager
         var vehicleTypeInput = _ui.ReadInput("Enter choice (1–5):");
         var color = _ui.ReadInput("Color: ");
         var wheelsInput = _ui.ReadInput("Number of wheels: ");
-        var fuelTypeInput = _ui.ReadInput("Fuel type (1=Gasoline, 2=Diesel, 3=Electric, 4=Hybrid, 5=None): ");
+        _ui.ShowFuelTypeMenu();
+        var fuelTypeInput = _ui.ReadInput("Enter choice (1-5):");
 
         // Parse user inputs into proper types
         string? vehicleType = GetVehicleType(vehicleTypeInput);
-        int? wheels = CheckWeelsInput(wheelsInput);
+        int? wheels = ParseWheelsInput(wheelsInput);
         FuelType? fuelType = ParseFuelType(fuelTypeInput);
 
         // Search garage with the provided criteria
         var results = _handler.GetVehicles(vehicleType, color, wheels, fuelType);
 
         // Display search results
-        if (results.Count() == 0)
+        if (!results.Any())
         {
             _ui.ShowMessage("\nNo vehicles found matching the criteria.");
+            return;
         }
-        else
+
+        _ui.ShowMessage($"\nFound {results.Count()} vehicle(s):");
+        foreach (var vehicle in results)
         {
-            _ui.ShowMessage($"\nFound {results.Count()} vehicle(s):");
-            foreach (var vehicle in results)
-            {
-                _ui.ShowMessage(vehicle.ToString());
-            }
+            _ui.ShowMessage(vehicle.ToString());
         }
     }
 
@@ -115,7 +115,7 @@ public class Manager
     {
         try
         {
-            var regNr = _ui.ReadInput("\nEnter Reg Number to remove vehicle: ");
+            var regNr = _ui.ReadUserInput("\nEnter Reg Number to remove vehicle: ");
             var result = _handler.RemoveVehicle(regNr);
 
             // Display removal result to user
@@ -128,10 +128,6 @@ public class Manager
                 _ui.ShowMessage($"\nVehicle with {regNr.ToUpper()} was not found in the garage");
             }
         }
-        catch (ArgumentNullException)
-        {
-            _ui.ShowMessage("\nRegistration number cannot be empty.");
-        }
         catch (Exception ex)
         {
             _ui.ShowMessage($"\nError removing vehicle: {ex.Message}");
@@ -142,40 +138,52 @@ public class Manager
     {
         try
         {
-            while (true)
+            // Collect vehicle information from user
+            _ui.ShowAddVehicleSubMenu();
+            var typeChoice = _ui.ReadIntInRange("Select menu option: ", 1, 5);
+            var color = _ui.ReadUserInput("Enter color: ");
+            var wheels = _ui.ReadInt("Enter number of wheels: ");
+            var fuelType = AskFuelType();
+
+            // Attempt to park the vehicle
+            var (result, parkedVehicle) = _handler.ParkVehicle(typeChoice, color, wheels, fuelType);
+
+            // Handle different parking results
+            switch (result)
             {
-                // Collect vehicle information from user
-                _ui.ShowAddVehicleSubMenu();
-                var typeChoice = _ui.ReadIntInRange("Select menu option: ", 1, 5);
-                var color = _ui.ReadUserInput("Enter color: ");
-                var wheels = _ui.ReadInt("Enter number of wheels: ");
-                var fuelType = AskFuelType();
+                case ParkResult.Success:
+                    _ui.ShowMessage(
+                        $"\nVehicle parked successfully. Reg: {parkedVehicle!.RegistrationNumber}");
+                    break;
 
-                // Attempt to park the vehicle
-                var (result, parkedVehicle) = _handler.ParkVehicle(typeChoice, color, wheels, fuelType);
+                case ParkResult.AlreadyInGarage:
+                    _ui.ShowMessage("\nThat vehicle is already parked in the garage.");
+                    break;
 
-                // Handle different parking results
-                switch (result)
-                {
-                    case ParkResult.Success:
-                        _ui.ShowMessage(
-                            $"\nVehicle parked successfully. Reg: {parkedVehicle!.RegistrationNumber}");
-                        break;
-
-                    case ParkResult.AlreadyInGarage:
-                        _ui.ShowMessage("\nThat vehicle is already parked in the garage.");
-                        break;
-
-                    case ParkResult.GarageIsFull:
-                        _ui.ShowMessage("\nGarage is full. Could not park vehicle.");
-                        break;
-                }
-                return;
+                case ParkResult.GarageIsFull:
+                    _ui.ShowMessage("\nGarage is full. Could not park vehicle.");
+                    break;
             }
         }
         catch (ArgumentNullException ex)
         {
             _ui.ShowMessage($"\nError: Required information is missing. {ex.Message}");
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            var message = ex.ParamName switch
+            {
+                "wheels" => "\nInvalid input: Number of wheels cannot be negative.",
+                "numberOfDoors" => "\nInvalid input: Number of doors must be greater than zero.",
+                "numberOfSeats" => "\nInvalid input: Number of seats must be greater than zero.",
+                "engineDisplacement" => "\nInvalid input: Engine displacement must be greater than zero.",
+                "length" => "\nInvalid input: Length must be greater than zero.",
+                "engines" => "\nInvalid input: Number of engines must be greater than zero.",
+                "wingspan" => "\nInvalid input: Wingspan must be greater than zero.",
+                _ => $"\nInvalid input: {ex.Message}"
+            };
+
+            _ui.ShowMessage(message);
         }
         catch (Exception ex)
         {
@@ -199,7 +207,7 @@ public class Manager
                 if (result.AvailableSpots <= 0)
                     _ui.ShowMessage("\nGarage is full, could not seed more vehicles.");
                 else
-                    _ui.ShowMessage("\nNo vehicles where seeded.");
+                    _ui.ShowMessage("\nNo vehicles were seeded.");
             }
             else
             {
@@ -253,18 +261,16 @@ public class Manager
         var vehicles = _handler.GetAllVehicles();
 
         // Display all vehicles or show empty message
-        if (vehicles.Count() == 0)
+        if (!vehicles.Any())
         {
             _ui.ShowMessage("\nGarage is empty");
+            return;
         }
-        else
-        {
-            _ui.ShowMessage($"\nVehicles in garage ({vehicles.Count()}):");
-            foreach (var v in vehicles)
-            {
-                _ui.ShowMessage(v.ToString());
-            }
 
+        _ui.ShowMessage($"\nVehicles in garage ({vehicles.Count()}):");
+        foreach (var v in vehicles)
+        {
+            _ui.ShowMessage(v.ToString());
         }
     }
 
@@ -273,17 +279,15 @@ public class Manager
         var counts = _handler.GetVehicleTypeCount();
 
         // Display vehicle type statistics
-        if (counts.Count() == 0)
+        if (!counts.Any())
         {
             _ui.ShowMessage("\nGarage is empty");
         }
-        else
+
+        _ui.ShowMessage("\nVehicles types in garage:");
+        foreach (var kvp in counts)
         {
-            _ui.ShowMessage("\nVehicles types in garage:");
-            foreach (var kvp in counts)
-            {
-                _ui.ShowMessage($"{kvp.Key}: {kvp.Value}");
-            }
+            _ui.ShowMessage($"{kvp.Key}: {kvp.Value}");
         }
     }
 
@@ -293,12 +297,7 @@ public class Manager
     {
         while (true)
         {
-            _ui.ShowMessage("\nChoose fuel type:");
-            _ui.ShowMessage("1. Gasoline");
-            _ui.ShowMessage("2. Diesel");
-            _ui.ShowMessage("3. Electric");
-            _ui.ShowMessage("4. Hybrid");
-            _ui.ShowMessage("5. None");
+            _ui.ShowFuelTypeMenu();
 
             var input = _ui.ReadInput("Enter choice (1–5): ");
 
@@ -342,7 +341,7 @@ public class Manager
         return vehicleType;
     }
 
-    private int? CheckWeelsInput(string wheelsInput)
+    private int? ParseWheelsInput(string wheelsInput)
     {
         // Parse wheels input and return null if empty or invalid
         int? wheels = null;
