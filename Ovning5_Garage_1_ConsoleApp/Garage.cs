@@ -43,7 +43,7 @@ public class Garage<T> : IGarage<T>, IEnumerable<T> where T : Vehicle
     // Finds and returns a vehicle by its registration number
     public T? GetVehicleByRegNr(string regNr)
     {
-        return _vehicles.FirstOrDefault(v => (v!.RegistrationNumber).Equals(regNr, StringComparison.CurrentCultureIgnoreCase));
+        return _vehicles.FirstOrDefault(v => v is not null && v.RegistrationNumber.Equals(regNr, StringComparison.CurrentCultureIgnoreCase));
     }
 
     // Parks a vehicle in the first available slot and returns the result status
