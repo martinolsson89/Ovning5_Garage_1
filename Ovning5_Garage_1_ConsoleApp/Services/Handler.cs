@@ -1,4 +1,5 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Interfaces;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
 using System;
@@ -11,10 +12,12 @@ public class Handler : IHandler
 {
     private readonly IGarage<Vehicle> _garage;
     private readonly Random _random = new();
-    
+    private VehicleFactory _vehicleFactory;
+
     public Handler(int capacity)
     {
         _garage = new Garage<Vehicle>(capacity);
+        _vehicleFactory = new VehicleFactory(_garage.GenerateRegistrationNumber, _random);
     }
 
     public int GetAvailableSpots()
@@ -23,8 +26,8 @@ public class Handler : IHandler
     }
 
     public IEnumerable<Vehicle> GetAllVehicles() => _garage;
-    
-    public IEnumerable<Vehicle> GetVehicles(string? vehicleType, string? color, int? wheels, FuelType? fuelType)
+
+    public IEnumerable<Vehicle> GetVehicles(VehicleType? vehicleType, string? color, int? wheels, FuelType? fuelType)
     {
         // Build dynamic search predicate based on provided criteria
         var results = _garage.GetVehicles(v =>
@@ -50,9 +53,9 @@ public class Handler : IHandler
             }
 
             // Check vehicle type if provided
-            if (!string.IsNullOrWhiteSpace(vehicleType))
+            if (vehicleType is not null)
             {
-                matches &= v.GetType().Name.Equals(vehicleType, StringComparison.OrdinalIgnoreCase);
+                matches &= v.GetType().Name.Equals(vehicleType.ToString(), StringComparison.OrdinalIgnoreCase);
             }
 
             return matches;
@@ -60,6 +63,59 @@ public class Handler : IHandler
 
         return results;
 
+    }
+
+    public IEnumerable<Vehicle> GetVehicles(VehicleQueryDto query)
+    {
+        if(query is null)
+        {
+            throw new ArgumentNullException(nameof(query));
+        }
+
+        var result = GetVehicles(query.VehicleType, query.Color, query.Wheels, query.FuelType);
+
+        // Apply type-specific filters only when provided
+        if (query.CarType is not null || query.NumberOfDoors is not null)
+        {
+            result = result.Where(v =>
+                v is Car car &&
+                (query.CarType is null || car.Type == query.CarType) &&
+                (query.NumberOfDoors is null || car.NumberOfDoors == query.NumberOfDoors));
+        }
+
+        if (query.MotorcycleType is not null || query.EngineDisplacement is not null)
+        {
+            result = result.Where(v =>
+                v is Motorcycle mc &&
+                (query.MotorcycleType is null || mc.Type == query.MotorcycleType) &&
+                (query.EngineDisplacement is null || mc.EngineDisplacement == query.EngineDisplacement));
+        }
+
+        if (query.NumberOfSeats is not null || query.IsDoubleDecker is not null)
+        {
+            result = result.Where(v =>
+                v is Bus bus &&
+                (query.NumberOfSeats is null || bus.NumberOfSeats == query.NumberOfSeats) &&
+                (query.IsDoubleDecker is null || bus.IsDoubleDecker == query.IsDoubleDecker));
+        }
+
+        if (query.BoatType is not null || query.Length is not null)
+        {
+            result = result.Where(v =>
+                v is Boat boat &&
+                (query.BoatType is null || boat.Type == query.BoatType) &&
+                (query.Length is null || boat.Length == query.Length));
+        }
+
+        if (query.Engines is not null || query.Wingspan is not null)
+        {
+            result = result.Where(v =>
+                v is Airplane ap &&
+                (query.Engines is null || ap.Engines == query.Engines) &&
+                (query.Wingspan is null || ap.Wingspan == query.Wingspan));
+        }
+
+        return result;
     }
 
     public Vehicle? GetVehicleByRegNr(string regNr)
@@ -72,10 +128,15 @@ public class Handler : IHandler
         return _garage.GetVehicleTypeCount();
     }
 
-    public (ParkResult, Vehicle? parkedVehicle) ParkVehicle(int vehicleType, string color, int wheels, FuelType fuelType)
+    public (ParkResult, Vehicle? parkedVehicle) ParkVehicle(VehicleDto dto)
     {
+        if(dto is null)
+        {
+            throw new ArgumentNullException(nameof(dto));
+        }
+
         // Create the appropriate vehicle type based on user choice
-        Vehicle? vehicle = CreateVehicleType(vehicleType, color, wheels, fuelType);
+        Vehicle? vehicle = CreateVehicleType(dto);
 
         if (vehicle is null)
         {
@@ -115,7 +176,7 @@ public class Handler : IHandler
         foreach (var v in vehiclesToSeed)
         {
             (ParkResult parked, Vehicle? pk) = _garage.Park(v);
-            if(parked == ParkResult.Success)
+            if (parked == ParkResult.Success)
             {
                 seeded++;
             }
@@ -124,7 +185,7 @@ public class Handler : IHandler
         return (seeded > 0, seeded, requestedCount, availableSpots);
     }
 
-    // Helper methods
+    #region Helper methods
 
     private IEnumerable<Vehicle> GenerateVehicles(int count)
     {
@@ -134,7 +195,7 @@ public class Handler : IHandler
             yield return GenerateRandomVehicle();
         }
     }
-    
+
     private Vehicle GenerateRandomVehicle()
     {
         // Randomly select vehicle type (0-4)
@@ -189,17 +250,17 @@ public class Handler : IHandler
                     wingspan: _random.Next(10, 60));
         }
     }
-    
-    private Vehicle? CreateVehicleType(int typeVehicle, string color, int wheels, FuelType fuelType)
+
+    private Vehicle? CreateVehicleType(VehicleDto dto)
     {
-        // Create vehicle based on type selection with user-provided properties
-        Vehicle? vehicle = typeVehicle switch
+        // Create vehicle based on type selection with user-provided dto
+        Vehicle? vehicle = dto.VehicleType switch
         {
-            1 => new Car(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, numberOfDoors: _random.Next(2, 5), GetRandomCarType()),
-            2 => new Motorcycle(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, GetRandomMotorcycleType(), _random.Next(50, 1300)),
-            3 => new Bus(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, _random.Next(10, 60), _random.Next(0, 2) == 1),
-            4 => new Boat(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, GetRandomBoatType(), _random.Next(5, 40)),
-            5 => new Airplane(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, _random.Next(1, 5), _random.Next(10, 60)),
+            VehicleType.Car => new Car(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.NumberOfDoors ?? _random.Next(2, 5), dto?.CarType ?? GetRandomCarType()),
+            VehicleType.Motorcycle => new Motorcycle(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.MotorcycleType ?? GetRandomMotorcycleType(), dto?.EngineDisplacement ?? _random.Next(50, 1300)),
+            VehicleType.Bus => new Bus(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.NumberOfSeats ?? _random.Next(10, 60), dto?.IsDoubleDecker ?? _random.Next(0, 2) == 1),
+            VehicleType.Boat => new Boat(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.BoatType ?? GetRandomBoatType(), dto?.Length ?? _random.Next(5, 40)),
+            VehicleType.Airplane => new Airplane(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.Engines ?? _random.Next(1, 5), dto?.Wingspan ?? _random.Next(10, 60)),
             _ => null
         };
 
@@ -217,22 +278,24 @@ public class Handler : IHandler
         FuelType[] fuels = { FuelType.Gasoline, FuelType.Diesel, FuelType.Hybrid, FuelType.Electric, FuelType.None };
         return fuels[_random.Next(fuels.Length)];
     }
-    
+
     private CarType GetRandomCarType()
     {
         CarType[] carTypes = { CarType.Sedan, CarType.Van, CarType.SportsCar, CarType.Suv };
         return carTypes[_random.Next(carTypes.Length)];
     }
-    
+
     private MotorcycleType GetRandomMotorcycleType()
     {
         MotorcycleType[] motorcycleTypes = { MotorcycleType.Motocross, MotorcycleType.Cruiser, MotorcycleType.Chopper, MotorcycleType.Sport };
         return motorcycleTypes[_random.Next(motorcycleTypes.Length)];
     }
-    
+
     private BoatType GetRandomBoatType()
     {
         BoatType[] boatTypes = { BoatType.Sailboat, BoatType.Motorboat, BoatType.Yacht, BoatType.FishingBoat };
         return boatTypes[_random.Next(boatTypes.Length)];
     }
+
+    #endregion
 }

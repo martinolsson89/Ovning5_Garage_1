@@ -41,3 +41,12 @@ public enum ParkResult
     GarageIsFull
 }
 
+public enum VehicleType
+{
+    Car = 1,
+    Motorcycle,
+    Bus,
+    Boat,
+    Airplane
+}
+

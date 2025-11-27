@@ -114,6 +114,7 @@ public class Garage<T> : IGarage<T>, IEnumerable<T> where T : Vehicle
         return _vehicles
             .Where(t => t != null)
             .GroupBy(t => t!.GetType().Name)
+            .OrderByDescending(g => g.Count())
             .ToDictionary(g => g.Key, g => g.Count());
     }
 
