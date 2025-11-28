@@ -14,6 +14,5 @@ public interface IHandler
     Dictionary<string, int> GetVehicleTypeCount();
     IEnumerable<Vehicle> GetAllVehicles();
     Vehicle? GetVehicleByRegNr(string regNr);
-    IEnumerable<Vehicle> GetVehicles(VehicleType? vehicleType, string? color, int? wheels, FuelType? fuelType);
     IEnumerable<Vehicle> GetVehicles(VehicleQueryDto query);
 }

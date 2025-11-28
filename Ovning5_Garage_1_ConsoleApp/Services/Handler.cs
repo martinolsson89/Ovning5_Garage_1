@@ -1,8 +1,11 @@
-﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+﻿using Microsoft.VisualBasic.FileIO;
+using Ovning5_Garage_1_ConsoleApp.DTOs;
 using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Interfaces;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
 using System;
+using System.Drawing;
+using System.Reflection.Metadata.Ecma335;
 
 
 
@@ -26,95 +29,16 @@ public class Handler : IHandler
 
     public IEnumerable<Vehicle> GetAllVehicles() => _garage;
 
-    public IEnumerable<Vehicle> GetVehicles(VehicleType? vehicleType, string? color, int? wheels, FuelType? fuelType)
-    {
-        // Build dynamic search predicate based on provided criteria
-        var results = _garage.GetVehicles(v =>
-        {
-            bool matches = true;
-
-            // Check color if provided
-            if (!string.IsNullOrWhiteSpace(color))
-            {
-                matches &= v.Color.Equals(color, StringComparison.OrdinalIgnoreCase);
-            }
-
-            // Check wheels if provided
-            if (wheels.HasValue)
-            {
-                matches &= v.Wheels == wheels.Value;
-            }
-
-            // Check fuel type if provided
-            if (fuelType.HasValue)
-            {
-                matches &= v.FuelType == fuelType.Value;
-            }
-
-            // Check vehicle type if provided
-            if (vehicleType is not null)
-            {
-                matches &= v.GetType().Name.Equals(vehicleType.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-
-            return matches;
-        });
-
-        return results;
-
-    }
-
     public IEnumerable<Vehicle> GetVehicles(VehicleQueryDto query)
     {
-        if(query is null)
+        if (query is null)
         {
             throw new ArgumentNullException(nameof(query));
         }
 
-        var result = GetVehicles(query.VehicleType, query.Color, query.Wheels, query.FuelType);
+        var results = _garage.GetVehicles(v => MatchesQuery(v, query));
 
-        // Apply type-specific filters only when provided
-        if (query.CarType is not null || query.NumberOfDoors is not null)
-        {
-            result = result.Where(v =>
-                v is Car car &&
-                (query.CarType is null || car.Type == query.CarType) &&
-                (query.NumberOfDoors is null || car.NumberOfDoors == query.NumberOfDoors));
-        }
-
-        if (query.MotorcycleType is not null || query.EngineDisplacement is not null)
-        {
-            result = result.Where(v =>
-                v is Motorcycle mc &&
-                (query.MotorcycleType is null || mc.Type == query.MotorcycleType) &&
-                (query.EngineDisplacement is null || mc.EngineDisplacement == query.EngineDisplacement));
-        }
-
-        if (query.NumberOfSeats is not null || query.IsDoubleDecker is not null)
-        {
-            result = result.Where(v =>
-                v is Bus bus &&
-                (query.NumberOfSeats is null || bus.NumberOfSeats == query.NumberOfSeats) &&
-                (query.IsDoubleDecker is null || bus.IsDoubleDecker == query.IsDoubleDecker));
-        }
-
-        if (query.BoatType is not null || query.Length is not null)
-        {
-            result = result.Where(v =>
-                v is Boat boat &&
-                (query.BoatType is null || boat.Type == query.BoatType) &&
-                (query.Length is null || boat.Length == query.Length));
-        }
-
-        if (query.Engines is not null || query.Wingspan is not null)
-        {
-            result = result.Where(v =>
-                v is Airplane ap &&
-                (query.Engines is null || ap.Engines == query.Engines) &&
-                (query.Wingspan is null || ap.Wingspan == query.Wingspan));
-        }
-
-        return result;
+        return results;
     }
 
     public Vehicle? GetVehicleByRegNr(string regNr)
@@ -193,6 +117,71 @@ public class Handler : IHandler
         {
             yield return _vehicleFactory.CreateRandomVehicle();
         }
+    }
+
+    private static bool MatchesQuery(Vehicle v, VehicleQueryDto query)
+    {
+        bool matches = true;
+
+        if (!string.IsNullOrWhiteSpace(query.Color))
+        {
+            matches &= v.Color.Equals(query.Color, StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (query.Wheels.HasValue)
+        {
+            matches &= v.Wheels == query.Wheels.Value;
+        }
+
+        if (query.FuelType.HasValue)
+        {
+            matches &= v.FuelType == query.FuelType.Value;
+        }
+
+        if (query.VehicleType is not null)
+        {
+            matches &= v.GetType().Name.Equals(query.VehicleType.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Type specific filters
+
+        if (query.CarType.HasValue || query.NumberOfDoors is not null)
+        {
+            matches &= v is Car car
+                && (!query.CarType.HasValue || car.Type == query.CarType.Value)
+                && (query.NumberOfDoors is null || car.NumberOfDoors == query.NumberOfDoors.Value);
+        }
+
+
+        if (query.MotorcycleType.HasValue || query.EngineDisplacement is not null)
+        {
+            matches &= v is Motorcycle mc
+                && (!query.MotorcycleType.HasValue || mc.Type == query.MotorcycleType.Value)
+                && (query.EngineDisplacement is null || mc.EngineDisplacement == query.EngineDisplacement.Value);
+        }
+
+        if (query.NumberOfSeats is not null || query.IsDoubleDecker is not null)
+        {
+            matches &= v is Bus bus
+                && (query.NumberOfSeats is null || bus.NumberOfSeats == query.NumberOfSeats.Value)
+                && (query.IsDoubleDecker is null || bus.IsDoubleDecker == query.IsDoubleDecker.Value);
+        }
+
+        if (query.BoatType.HasValue || query.Length is not null)
+        {
+            matches &= v is Boat boat
+                && (!query.BoatType.HasValue || boat.Type == query.BoatType.Value)
+                && (query.Length is null || boat.Length == query.Length.Value);
+        }
+
+        if (query.Engines is not null || query.Wingspan is not null)
+        {
+            matches &= v is Airplane plane
+                && (query.Engines is null || plane.Engines == query.Engines.Value)
+                && (query.Wingspan is null || plane.Wingspan == query.Wingspan.Value);
+        }
+
+        return matches;
     }
 
     #endregion
