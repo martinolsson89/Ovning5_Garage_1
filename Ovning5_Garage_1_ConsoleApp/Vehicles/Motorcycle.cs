@@ -7,7 +7,7 @@ public class Motorcycle : Vehicle
     public MotorcycleType Type { get; }
     public int EngineDisplacement { get; }
     public Motorcycle(string registrationNumber, string color, int wheels, FuelType fueltype, MotorcycleType type, int engineDisplacement)
-        : base(registrationNumber, color, wheels, fueltype)
+        : base(registrationNumber, color, 2, fueltype)
     {
         if (engineDisplacement <= 0)
             throw new ArgumentOutOfRangeException(nameof(engineDisplacement), "Engine displacement must be greater than zero.");

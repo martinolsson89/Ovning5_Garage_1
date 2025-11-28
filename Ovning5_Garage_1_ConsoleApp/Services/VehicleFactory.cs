@@ -17,50 +17,165 @@ public class VehicleFactory
         _random = random ?? new Random();
     }
 
-    public Vehicle CreateRandomVehicle()
+    public Vehicle CreateFromDto(VehicleDto dto, bool allowRandomFallbacks = true)
     {
-        var vehicleType = GetRandomVehicleType();
-        return CreateVehicle(vehicleType);
-    }
-
-    public bool TryCreateVehicle(VehicleType vehicleType, VehicleFactoryOptions? options, out Vehicle? vehicle)
-    {
-        if (!Enum.IsDefined(typeof(VehicleType), vehicleType))
+        if (dto is null)
         {
-            vehicle = null;
-            return false;
+            throw new ArgumentNullException(nameof(dto));
         }
 
-        vehicle = CreateVehicleInternal(vehicleType, options ?? new VehicleFactoryOptions());
-        return true;
-    }
-
-    public Vehicle CreateVehicle(VehicleType vehicleType, VehicleFactoryOptions? options = null)
-    {
-        if (!TryCreateVehicle(vehicleType, options, out var vehicle) || vehicle is null)
-        {
-            throw new ArgumentOutOfRangeException(nameof(vehicleType));
-        }
-
-        return vehicle;
-    }
-
-    private Vehicle CreateVehicleInternal(VehicleType vehicleType, VehicleFactoryOptions options)
-    {
         var registrationNumber = _registrationNumberGenerator();
-        var color = options.Color ?? GetRandomColor();
-        var wheels = options.Wheels ?? GetDefaultWheels(vehicleType);
-        var fuelType = options.FuelType ?? GetDefaultFuelType(vehicleType);
+        var vehicleType = dto.VehicleType;
+        var color = ResolveColor(dto.Color, allowRandomFallbacks);
+        var fuelType = ResolveFuel(dto.FuelType, vehicleType, allowRandomFallbacks);
 
         return vehicleType switch
         {
-            VehicleType.Car => new Car(registrationNumber, color, wheels, fuelType, _random.Next(2, 5), GetRandomCarType()),
-            VehicleType.Motorcycle => new Motorcycle(registrationNumber, color, wheels, fuelType, GetRandomMotorcycleType(), _random.Next(50, 1300)),
-            VehicleType.Bus => new Bus(registrationNumber, color, wheels, fuelType, _random.Next(10, 60), _random.Next(0, 2) == 1),
-            VehicleType.Boat => new Boat(registrationNumber, color, wheels, fuelType, GetRandomBoatType(), _random.Next(5, 40)),
-            VehicleType.Airplane => new Airplane(registrationNumber, color, wheels, fuelType, _random.Next(1, 5), _random.Next(10, 60)),
-            _ => throw new ArgumentOutOfRangeException(nameof(vehicleType))
+            VehicleType.Car => new Car(
+                registrationNumber,
+                color,
+                4,
+                fuelType,
+                ResolveNumber(dto.NumberOfDoors, () => _random.Next(2, 5), nameof(dto.NumberOfDoors), allowRandomFallbacks),
+                ResolveEnum(dto.CarType, GetRandomCarType, nameof(dto.CarType), allowRandomFallbacks)),
+
+            VehicleType.Motorcycle => new Motorcycle(
+                registrationNumber,
+                color,
+                2,
+                fuelType,
+                ResolveEnum(dto.MotorcycleType, GetRandomMotorcycleType, nameof(dto.MotorcycleType), allowRandomFallbacks),
+                ResolveNumber(dto.EngineDisplacement, () => _random.Next(50, 1300), nameof(dto.EngineDisplacement), allowRandomFallbacks)),
+
+            VehicleType.Bus => new Bus(
+                registrationNumber,
+                color,
+                4,
+                fuelType,
+                ResolveNumber(dto.NumberOfSeats, () => _random.Next(10, 60), nameof(dto.NumberOfSeats), allowRandomFallbacks),
+                ResolveBool(dto.IsDoubleDecker, () => _random.Next(0, 2) == 1, nameof(dto.IsDoubleDecker), allowRandomFallbacks)),
+
+            VehicleType.Boat => new Boat(
+                registrationNumber,
+                color,
+                0,
+                fuelType,
+                ResolveEnum(dto.BoatType, GetRandomBoatType, nameof(dto.BoatType), allowRandomFallbacks),
+                ResolveNumber(dto.Length, () => _random.Next(5, 40), nameof(dto.Length), allowRandomFallbacks)),
+
+            VehicleType.Airplane => new Airplane(
+                registrationNumber,
+                color,
+                6,
+                fuelType,
+                ResolveNumber(dto.Engines, () => _random.Next(1, 5), nameof(dto.Engines), allowRandomFallbacks),
+                ResolveNumber(dto.Wingspan, () => _random.Next(10, 60), nameof(dto.Wingspan), allowRandomFallbacks)),
+
+            _ => throw new ArgumentOutOfRangeException(nameof(dto.VehicleType))
         };
+    }
+
+    public Vehicle CreateRandomVehicle()
+    {
+        var vehicleType = GetRandomVehicleType();
+        var dto = new VehicleDto
+        {
+            VehicleType = vehicleType,
+            Color = string.Empty,
+            FuelType = FuelType.None
+        };
+
+        return CreateFromDto(dto, allowRandomFallbacks: true);
+    }
+
+    private string ResolveColor(string? color, bool allowRandomFallbacks)
+    {
+        if (!string.IsNullOrWhiteSpace(color))
+        {
+            return color;
+        }
+
+        if (!allowRandomFallbacks)
+        {
+            throw new ArgumentException("Color must be provided", nameof(color));
+        }
+
+        return GetRandomColor();
+    }
+
+    private int ResolveWheels(int wheels, VehicleType vehicleType, bool allowRandomFallbacks)
+    {
+        if (wheels > 0)
+        {
+            return wheels;
+        }
+
+        if (!allowRandomFallbacks)
+        {
+            throw new ArgumentException("Wheels must be provided", nameof(wheels));
+        }
+
+        return GetDefaultWheels(vehicleType);
+    }
+
+    private FuelType ResolveFuel(FuelType fuelType, VehicleType vehicleType, bool allowRandomFallbacks)
+    {
+        if (Enum.IsDefined(typeof(FuelType), fuelType) && fuelType != FuelType.None)
+        {
+            return fuelType;
+        }
+
+        if (!allowRandomFallbacks)
+        {
+            throw new ArgumentException("Fuel type must be provided", nameof(fuelType));
+        }
+
+        return GetDefaultFuelType(vehicleType);
+    }
+
+    private int ResolveNumber(int? value, Func<int> randomValue, string paramName, bool allowRandomFallbacks)
+    {
+        if (value.HasValue && value.Value > 0)
+        {
+            return value.Value;
+        }
+
+        if (!allowRandomFallbacks)
+        {
+            throw new ArgumentNullException(paramName);
+        }
+
+        return randomValue();
+    }
+
+    private bool ResolveBool(bool? value, Func<bool> randomValue, string paramName, bool allowRandomFallbacks)
+    {
+        if (value.HasValue)
+        {
+            return value.Value;
+        }
+
+        if (!allowRandomFallbacks)
+        {
+            throw new ArgumentNullException(paramName);
+        }
+
+        return randomValue();
+    }
+
+    private T ResolveEnum<T>(T? value, Func<T> randomValue, string paramName, bool allowRandomFallbacks) where T : struct, Enum
+    {
+        if (value.HasValue)
+        {
+            return value.Value;
+        }
+
+        if (!allowRandomFallbacks)
+        {
+            throw new ArgumentNullException(paramName);
+        }
+
+        return randomValue();
     }
 
     private VehicleType GetRandomVehicleType()
@@ -120,9 +235,3 @@ public class VehicleFactory
     }
 }
 
-public class VehicleFactoryOptions
-{
-    public string? Color { get; init; }
-    public int? Wheels { get; init; }
-    public FuelType? FuelType { get; init; }
-}

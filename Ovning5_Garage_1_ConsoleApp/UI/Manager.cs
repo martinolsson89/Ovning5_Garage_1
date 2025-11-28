@@ -133,7 +133,6 @@ public class Manager
 
             dto.VehicleType = (VehicleType)_ui.ReadIntInRange("Select menu option: ", 1, 5);
             dto.Color = _ui.ReadUserInput("Enter color: ");
-            dto.Wheels = _ui.ReadInt("Enter number of wheels: ");
             dto.FuelType = AskFuelType();
             CollectTypeDetails(dto);
 
@@ -353,7 +352,7 @@ public class Manager
     }
 
 
-    // Helper methods
+    #region Helper methods
     private void CollectTypeDetails(VehicleDto dto)
     {
         switch (dto.VehicleType)
@@ -612,4 +611,6 @@ public class Manager
             if (type != null) return (BoatType)type;
         }
     }
+
+    #endregion
 }

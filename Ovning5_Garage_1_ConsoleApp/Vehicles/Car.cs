@@ -8,7 +8,7 @@ public class Car : Vehicle
     public CarType Type { get; }
 
     public Car(string registrationNumber, string color, int wheels, FuelType fueltype, int numberOfDoors, CarType type)
-        : base(registrationNumber, color, wheels, fueltype)
+        : base(registrationNumber, color, 4, fueltype)
     {
         if (numberOfDoors <= 0)
             throw new ArgumentOutOfRangeException(nameof(numberOfDoors), "Number of doors must be greater than zero.");

@@ -11,13 +11,12 @@ namespace Ovning5_Garage_1_ConsoleApp.Services;
 public class Handler : IHandler
 {
     private readonly IGarage<Vehicle> _garage;
-    private readonly Random _random = new();
     private VehicleFactory _vehicleFactory;
 
     public Handler(int capacity)
     {
         _garage = new Garage<Vehicle>(capacity);
-        _vehicleFactory = new VehicleFactory(_garage.GenerateRegistrationNumber, _random);
+        _vehicleFactory = new VehicleFactory(_garage.GenerateRegistrationNumber);
     }
 
     public int GetAvailableSpots()
@@ -136,7 +135,7 @@ public class Handler : IHandler
         }
 
         // Create the appropriate vehicle type based on user choice
-        Vehicle? vehicle = CreateVehicleType(dto);
+        Vehicle vehicle = _vehicleFactory.CreateFromDto(dto);
 
         if (vehicle is null)
         {
@@ -175,7 +174,7 @@ public class Handler : IHandler
         // Attempt to park each generated vehicle
         foreach (var v in vehiclesToSeed)
         {
-            (ParkResult parked, Vehicle? pk) = _garage.Park(v);
+            (ParkResult parked, Vehicle? _) = _garage.Park(v);
             if (parked == ParkResult.Success)
             {
                 seeded++;
@@ -192,109 +191,8 @@ public class Handler : IHandler
         // Lazy generate vehicles one at a time
         for (int i = 0; i < count; i++)
         {
-            yield return GenerateRandomVehicle();
+            yield return _vehicleFactory.CreateRandomVehicle();
         }
-    }
-
-    private Vehicle GenerateRandomVehicle()
-    {
-        // Randomly select vehicle type (0-4)
-        var vehicleType = _random.Next(0, 5);
-
-        switch (vehicleType)
-        {
-            case 0:
-                return new Car(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: 4,
-                    fueltype: GetRandomFuel(),
-                    numberOfDoors: _random.Next(2, 5),
-                    type: GetRandomCarType());
-
-            case 1:
-                return new Motorcycle(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: 2,
-                    fueltype: GetRandomFuel(),
-                    type: GetRandomMotorcycleType(),
-                    engineDisplacement: _random.Next(50, 1300));
-
-            case 2:
-                return new Bus(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: 4,
-                    fueltype: FuelType.Diesel,
-                    numberOfSeats: _random.Next(10, 60),
-                    isDoubleDecker: _random.Next(0, 2) == 1);
-
-            case 3:
-                return new Boat(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: 0,
-                    fueltype: FuelType.None,
-                    type: GetRandomBoatType(),
-                    length: _random.Next(5, 40));
-
-            case 4:
-            default:
-                return new Airplane(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: _random.Next(2, 9),
-                    fueltype: FuelType.Gasoline,
-                    engines: _random.Next(1, 5),
-                    wingspan: _random.Next(10, 60));
-        }
-    }
-
-    private Vehicle? CreateVehicleType(VehicleDto dto)
-    {
-        // Create vehicle based on type selection with user-provided dto
-        Vehicle? vehicle = dto.VehicleType switch
-        {
-            VehicleType.Car => new Car(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.NumberOfDoors ?? _random.Next(2, 5), dto?.CarType ?? GetRandomCarType()),
-            VehicleType.Motorcycle => new Motorcycle(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.MotorcycleType ?? GetRandomMotorcycleType(), dto?.EngineDisplacement ?? _random.Next(50, 1300)),
-            VehicleType.Bus => new Bus(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.NumberOfSeats ?? _random.Next(10, 60), dto?.IsDoubleDecker ?? _random.Next(0, 2) == 1),
-            VehicleType.Boat => new Boat(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.BoatType ?? GetRandomBoatType(), dto?.Length ?? _random.Next(5, 40)),
-            VehicleType.Airplane => new Airplane(_garage.GenerateRegistrationNumber(), dto.Color, dto.Wheels, dto.FuelType, dto?.Engines ?? _random.Next(1, 5), dto?.Wingspan ?? _random.Next(10, 60)),
-            _ => null
-        };
-
-        return vehicle;
-    }
-
-    private string GetRandomColor()
-    {
-        string[] colors = { "Red", "Blue", "Green", "Black", "White", "Yellow", "Pink" };
-        return colors[_random.Next(colors.Length)];
-    }
-
-    private FuelType GetRandomFuel()
-    {
-        FuelType[] fuels = { FuelType.Gasoline, FuelType.Diesel, FuelType.Hybrid, FuelType.Electric, FuelType.None };
-        return fuels[_random.Next(fuels.Length)];
-    }
-
-    private CarType GetRandomCarType()
-    {
-        CarType[] carTypes = { CarType.Sedan, CarType.Van, CarType.SportsCar, CarType.Suv };
-        return carTypes[_random.Next(carTypes.Length)];
-    }
-
-    private MotorcycleType GetRandomMotorcycleType()
-    {
-        MotorcycleType[] motorcycleTypes = { MotorcycleType.Motocross, MotorcycleType.Cruiser, MotorcycleType.Chopper, MotorcycleType.Sport };
-        return motorcycleTypes[_random.Next(motorcycleTypes.Length)];
-    }
-
-    private BoatType GetRandomBoatType()
-    {
-        BoatType[] boatTypes = { BoatType.Sailboat, BoatType.Motorboat, BoatType.Yacht, BoatType.FishingBoat };
-        return boatTypes[_random.Next(boatTypes.Length)];
     }
 
     #endregion

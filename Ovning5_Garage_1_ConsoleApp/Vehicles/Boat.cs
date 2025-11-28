@@ -8,7 +8,7 @@ public class Boat : Vehicle
     public int Length { get; }
 
     public Boat(string registrationNumber, string color, int wheels, FuelType fueltype, BoatType type, int length)
-        : base(registrationNumber, color, wheels, fueltype)
+        : base(registrationNumber, color, 0, fueltype)
     {
         if (length <= 0)
             throw new ArgumentOutOfRangeException(nameof(length), "Length must be greater than zero.");

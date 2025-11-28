@@ -9,7 +9,6 @@ public class VehicleDto
     // Base
     public VehicleType VehicleType { get; set; }
     public string Color { get; set; } = string.Empty;
-    public int Wheels { get; set; }
     public FuelType FuelType { get; set; }
 
     // Car
