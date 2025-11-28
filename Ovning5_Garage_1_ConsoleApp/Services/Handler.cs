@@ -11,7 +11,7 @@ namespace Ovning5_Garage_1_ConsoleApp.Services;
 public class Handler : IHandler
 {
     private readonly IGarage<Vehicle> _garage;
-    private VehicleFactory _vehicleFactory;
+    private readonly IVehicleFactory _vehicleFactory;
 
     public Handler(int capacity)
     {
