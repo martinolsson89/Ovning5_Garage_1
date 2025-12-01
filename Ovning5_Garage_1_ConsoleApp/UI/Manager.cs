@@ -1,5 +1,7 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Interfaces;
+using System.Xml;
 
 namespace Ovning5_Garage_1_ConsoleApp.UI;
 
@@ -125,22 +127,24 @@ public class Manager
     {
         try
         {
-            // Collect vehicle information from user
             _ui.ShowAddVehicleSubMenu();
-            var typeChoice = _ui.ReadIntInRange("Select menu option: ", 1, 5);
-            var color = _ui.ReadUserInput("Enter color: ");
-            var wheels = _ui.ReadInt("Enter number of wheels: ");
-            var fuelType = AskFuelType();
+            var dto = new VehicleDto();
+
+            // Collect vehicle information from user
+            dto.VehicleType = (VehicleType)_ui.ReadIntInRange("Select menu option: ", 1, 5);
+            dto.Color = _ui.ReadUserInput("Enter color: ");
+            dto.FuelType = AskFuelType();
+            CollectTypeDetails(dto);
 
             // Attempt to park the vehicle
-            var (result, parkedVehicle) = _handler.ParkVehicle(typeChoice, color, wheels, fuelType);
+            var (result, parkedVehicle) = _handler.ParkVehicle(dto);
 
             // Handle different parking results
             switch (result)
             {
                 case ParkResult.Success:
                     _ui.ShowMessage(
-                        $"\nVehicle parked successfully. Reg: {parkedVehicle!.RegistrationNumber}");
+                        $"\n{parkedVehicle?.GetType().Name} parked successfully! Reg: {parkedVehicle!.RegistrationNumber}");
                     break;
 
                 case ParkResult.AlreadyInGarage:
@@ -231,12 +235,26 @@ public class Manager
         var fuelTypeInput = _ui.ReadInput("Enter choice (1-5):");
 
         // Parse user inputs into proper types
-        string? vehicleType = GetVehicleType(vehicleTypeInput);
+        VehicleType? vehicleType = GetVehicleType(vehicleTypeInput);
         int? wheels = ParseWheelsInput(wheelsInput);
         FuelType? fuelType = ParseFuelType(fuelTypeInput);
 
+        var query = new VehicleQueryDto
+        {
+            VehicleType = vehicleType,
+            Color = string.IsNullOrWhiteSpace(color) ? null : color,
+            Wheels = wheels,
+            FuelType = fuelType
+        };
+        // Optional type-specific filters if a type was chosen
+        if (vehicleType is not null)
+        {
+            CollectTypeQueryFilters(query, vehicleType);
+        }
+
         // Search garage with the provided criteria
-        var results = _handler.GetVehicles(vehicleType, color, wheels, fuelType);
+        //var results = _handler.GetVehicles(vehicleType, color, wheels, fuelType);
+        var results = _handler.GetVehicles(query);
 
         // Display search results
         if (!results.Any())
@@ -291,8 +309,90 @@ public class Manager
 
     }
 
+    // Collect optional sub-class filters (blank to skip each)
+    private void CollectTypeQueryFilters(VehicleQueryDto query, VehicleType? vehicleType)
+    {
+        switch (vehicleType)
+        {
+            case VehicleType.Car:
+                var doorsInput = _ui.ReadInput("Number of doors (blank = any): ");
+                query.NumberOfDoors = ParseNullableInt(doorsInput);
+                var carType = AskOptionalCarType();
+                query.CarType = carType;
+                break;
 
-    // Helper methods
+            case VehicleType.Motorcycle:
+                var displacementInput = _ui.ReadInput("Engine displacement in cc (blank = any): ");
+                query.EngineDisplacement = ParseNullableInt(displacementInput);
+                var mcType = AskOptionalMotorcycleType();
+                query.MotorcycleType = mcType;
+                break;
+
+            case VehicleType.Bus:
+                var seatsInput = _ui.ReadInput("Number of seats (blank = any): ");
+                query.NumberOfSeats = ParseNullableInt(seatsInput);
+                var ddInput = _ui.ReadInput("Is double-decker? (y/n, blank = any): ");
+                query.IsDoubleDecker = ParseNullableBool(ddInput);
+                break;
+
+            case VehicleType.Boat:
+                var lengthInput = _ui.ReadInput("Length in meters (blank = any): ");
+                query.Length = ParseNullableInt(lengthInput);
+                var boatType = AskOptionalBoatType();
+                query.BoatType = boatType;
+                break;
+
+            case VehicleType.Airplane:
+                var enginesInput = _ui.ReadInput("Number of engines (blank = any): ");
+                query.Engines = ParseNullableInt(enginesInput);
+                var wingspanInput = _ui.ReadInput("Wingspan in meters (blank = any): ");
+                query.Wingspan = ParseNullableInt(wingspanInput);
+                break;
+        }
+    }
+
+
+    #region Helper methods
+    private void CollectTypeDetails(VehicleDto dto)
+    {
+        switch (dto.VehicleType)
+        {
+            case VehicleType.Car: // Car
+                var numberOfDoors = _ui.ReadInt("Enter number of doors: ");
+                var carType = AskCarType();
+                dto.NumberOfDoors = numberOfDoors;
+                dto.CarType = carType;
+                break;
+
+            case VehicleType.Motorcycle: // Motorcycle
+                var engineDisplacement = _ui.ReadInt("Enter engine displacement (cc): ");
+                var motorcycleType = AskMotorcycleType();
+                dto.EngineDisplacement = engineDisplacement;
+                dto.MotorcycleType = motorcycleType;
+                break;
+
+            case VehicleType.Bus: // Bus
+                var numberOfSeats = _ui.ReadInt("Enter number of seats: ");
+                var isDoubleDecker = _ui.ReadYesNo("Is double-decker? (y/n): ");
+                dto.NumberOfSeats = numberOfSeats;
+                dto.IsDoubleDecker = isDoubleDecker;
+                break;
+
+            case VehicleType.Boat: // Boat
+                var length = _ui.ReadInt("Enter length (m): ");
+                var boatType = AskBoatType();
+                dto.Length = length;
+                dto.BoatType = boatType;
+                break;
+
+            case VehicleType.Airplane: // Airplane
+                var engines = _ui.ReadInt("Enter number of engines: ");
+                var wingspan = _ui.ReadInt("Enter wingspan (m): ");
+                dto.Engines = engines;
+                dto.Wingspan = wingspan;
+                break;
+        }
+    }
 
     private FuelType AskFuelType()
     {
@@ -326,16 +426,16 @@ public class Manager
         };
     }
 
-    private string? GetVehicleType(string? choice)
+    private VehicleType? GetVehicleType(string? choice)
     {
         // Convert numeric choice to vehicle type name
-        string? vehicleType = choice switch
+        VehicleType? vehicleType = choice switch
         {
-            "1" => "Car",
-            "2" => "Motorcycle",
-            "3" => "Bus",
-            "4" => "Boat",
-            "5" => "Airplane",
+            "1" => VehicleType.Car,
+            "2" => VehicleType.Motorcycle,
+            "3" => VehicleType.Bus,
+            "4" => VehicleType.Boat,
+            "5" => VehicleType.Airplane,
             _ => null
         };
 
@@ -356,4 +456,161 @@ public class Manager
 
         return wheels;
     }
+
+    private CarType AskCarType()
+    {
+        _ui.ShowMessage("\nSelect Car Type:");
+        _ui.ShowMessage("1. Sedan");
+        _ui.ShowMessage("2. SUV");
+        _ui.ShowMessage("3. Van");
+        _ui.ShowMessage("4. Sports car");
+        while (true)
+        {
+            var input = _ui.ReadInput("Enter choice (1–4): ");
+            var type = input switch
+            {
+                "1" => CarType.Sedan,
+                "2" => CarType.Suv,
+                "3" => CarType.Van,
+                "4" => CarType.SportsCar,
+                _ => (CarType?)null
+            };
+            if (type != null) return (CarType)type;
+        }
+    }
+
+    private MotorcycleType AskMotorcycleType()
+    {
+        _ui.ShowMessage("\nSelect Motorcycle Type:");
+        _ui.ShowMessage("1. Cruiser");
+        _ui.ShowMessage("2. Sport");
+        _ui.ShowMessage("3. Motocross");
+        _ui.ShowMessage("4. Chopper");
+        while (true)
+        {
+            var input = _ui.ReadInput("Enter choice (1–4): ");
+            var type = input switch
+            {
+                "1" => MotorcycleType.Cruiser,
+                "2" => MotorcycleType.Sport,
+                "3" => MotorcycleType.Motocross,
+                "4" => MotorcycleType.Chopper,
+                _ => (MotorcycleType?)null
+            };
+            if (type != null) return (MotorcycleType)type;
+        }
+    }
+
+    private BoatType AskBoatType()
+    {
+        _ui.ShowMessage("\nSelect Boat Type:");
+        _ui.ShowMessage("1. Sailboat");
+        _ui.ShowMessage("2. Motorboat");
+        _ui.ShowMessage("3. Yacht");
+        _ui.ShowMessage("4. Fishing boat");
+        while (true)
+        {
+            var input = _ui.ReadInput("Enter choice (1–4): ");
+            var type = input switch
+            {
+                "1" => BoatType.Sailboat,
+                "2" => BoatType.Motorboat,
+                "3" => BoatType.Yacht,
+                "4" => BoatType.FishingBoat,
+                _ => (BoatType?)null
+            };
+            if (type != null) return (BoatType)type;
+        }
+    }
+
+    // Query
+
+    private static int? ParseNullableInt(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        return int.TryParse(input, out var value) ? value : null;
+    }
+
+    private static bool? ParseNullableBool(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var s = input.Trim().ToLowerInvariant();
+        return s switch
+        {
+            "y" or "yes" => true,
+            "n" or "no" => false,
+            _ => null
+        };
+    }
+
+    private CarType? AskOptionalCarType()
+    {
+        _ui.ShowMessage("\nSelect Car Type (blank = any):");
+        _ui.ShowMessage("1. Sedan");
+        _ui.ShowMessage("2. SUV");
+        _ui.ShowMessage("3. Van");
+        _ui.ShowMessage("4. Sports car");
+        while (true)
+        {
+            var input = _ui.ReadInput("Enter choice (1–4) or blank: ");
+            if (string.IsNullOrWhiteSpace(input)) return null;
+            var type = input switch
+            {
+                "1" => CarType.Sedan,
+                "2" => CarType.Suv,
+                "3" => CarType.Van,
+                "4" => CarType.SportsCar,
+                _ => (CarType?)null
+            };
+            if (type != null) return (CarType)type;
+        }
+    }
+
+    private MotorcycleType? AskOptionalMotorcycleType()
+    {
+        _ui.ShowMessage("\nSelect Motorcycle Type (blank = any):");
+        _ui.ShowMessage("1. Cruiser");
+        _ui.ShowMessage("2. Sport");
+        _ui.ShowMessage("3. Motocross");
+        _ui.ShowMessage("4. Chopper");
+        while (true)
+        {
+            var input = _ui.ReadInput("Enter choice (1–4) or blank: ");
+            if (string.IsNullOrWhiteSpace(input)) return null;
+            var type = input switch
+            {
+                "1" => MotorcycleType.Cruiser,
+                "2" => MotorcycleType.Sport,
+                "3" => MotorcycleType.Motocross,
+                "4" => MotorcycleType.Chopper,
+                _ => (MotorcycleType?)null
+            };
+            if (type != null) return (MotorcycleType)type;
+        }
+    }
+
+    private BoatType? AskOptionalBoatType()
+    {
+        _ui.ShowMessage("\nSelect Boat Type (blank = any):");
+        _ui.ShowMessage("1. Sailboat");
+        _ui.ShowMessage("2. Motorboat");
+        _ui.ShowMessage("3. Yacht");
+        _ui.ShowMessage("4. Fishing boat");
+        while (true)
+        {
+            var input = _ui.ReadInput("Enter choice (1–4) or blank: ");
+            if (string.IsNullOrWhiteSpace(input)) return null;
+            var type = input switch
+            {
+                "1" => BoatType.Sailboat,
+                "2" => BoatType.Motorboat,
+                "3" => BoatType.Yacht,
+                "4" => BoatType.FishingBoat,
+                _ => (BoatType?)null
+            };
+            if (type != null) return (BoatType)type;
+        }
+    }
+
+    #endregion
 }

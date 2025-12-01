@@ -124,4 +124,21 @@ public class ConsoleUI : IUI
             ShowMessage("Invalid capacity, please enter a positive integer.");
         }
     }
+
+    public bool ReadYesNo(string prompt)
+    {
+        while (true)
+        {
+            var input = ReadInput(prompt);
+            switch (input.Trim().ToLowerInvariant())
+            {
+                case "y":
+                case "yes":
+                    return true;
+                case "n":
+                case "no":
+                    return false;
+            }
+        }
+    }
 }

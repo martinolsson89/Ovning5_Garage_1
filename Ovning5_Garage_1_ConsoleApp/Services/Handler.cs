@@ -1,7 +1,7 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Interfaces;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
-using System;
 
 
 
@@ -10,11 +10,12 @@ namespace Ovning5_Garage_1_ConsoleApp.Services;
 public class Handler : IHandler
 {
     private readonly IGarage<Vehicle> _garage;
-    private readonly Random _random = new();
-    
+    private readonly IVehicleFactory _vehicleFactory;
+
     public Handler(int capacity)
     {
         _garage = new Garage<Vehicle>(capacity);
+        _vehicleFactory = new VehicleFactory(_garage.GenerateRegistrationNumber);
     }
 
     public int GetAvailableSpots()
@@ -23,43 +24,17 @@ public class Handler : IHandler
     }
 
     public IEnumerable<Vehicle> GetAllVehicles() => _garage;
-    
-    public IEnumerable<Vehicle> GetVehicles(string? vehicleType, string? color, int? wheels, FuelType? fuelType)
+
+    public IEnumerable<Vehicle> GetVehicles(VehicleQueryDto query)
     {
-        // Build dynamic search predicate based on provided criteria
-        var results = _garage.GetVehicles(v =>
+        if (query is null)
         {
-            bool matches = true;
+            throw new ArgumentNullException(nameof(query));
+        }
 
-            // Check color if provided
-            if (!string.IsNullOrWhiteSpace(color))
-            {
-                matches &= v.Color.Equals(color, StringComparison.OrdinalIgnoreCase);
-            }
-
-            // Check wheels if provided
-            if (wheels.HasValue)
-            {
-                matches &= v.Wheels == wheels.Value;
-            }
-
-            // Check fuel type if provided
-            if (fuelType.HasValue)
-            {
-                matches &= v.FuelType == fuelType.Value;
-            }
-
-            // Check vehicle type if provided
-            if (!string.IsNullOrWhiteSpace(vehicleType))
-            {
-                matches &= v.GetType().Name.Equals(vehicleType, StringComparison.OrdinalIgnoreCase);
-            }
-
-            return matches;
-        });
+        var results = _garage.GetVehicles(v => MatchesQuery(v, query));
 
         return results;
-
     }
 
     public Vehicle? GetVehicleByRegNr(string regNr)
@@ -72,10 +47,15 @@ public class Handler : IHandler
         return _garage.GetVehicleTypeCount();
     }
 
-    public (ParkResult, Vehicle? parkedVehicle) ParkVehicle(int vehicleType, string color, int wheels, FuelType fuelType)
+    public (ParkResult, Vehicle? parkedVehicle) ParkVehicle(VehicleDto dto)
     {
+        if(dto is null)
+        {
+            throw new ArgumentNullException(nameof(dto));
+        }
+
         // Create the appropriate vehicle type based on user choice
-        Vehicle? vehicle = CreateVehicleType(vehicleType, color, wheels, fuelType);
+        Vehicle vehicle = _vehicleFactory.CreateFromDto(dto, false);
 
         if (vehicle is null)
         {
@@ -114,8 +94,8 @@ public class Handler : IHandler
         // Attempt to park each generated vehicle
         foreach (var v in vehiclesToSeed)
         {
-            (ParkResult parked, Vehicle? pk) = _garage.Park(v);
-            if(parked == ParkResult.Success)
+            (ParkResult parked, Vehicle? _) = _garage.Park(v);
+            if (parked == ParkResult.Success)
             {
                 seeded++;
             }
@@ -124,115 +104,81 @@ public class Handler : IHandler
         return (seeded > 0, seeded, requestedCount, availableSpots);
     }
 
-    // Helper methods
+    #region Helper methods
 
     private IEnumerable<Vehicle> GenerateVehicles(int count)
     {
         // Lazy generate vehicles one at a time
         for (int i = 0; i < count; i++)
         {
-            yield return GenerateRandomVehicle();
+            yield return _vehicleFactory.CreateRandomVehicle();
         }
     }
-    
-    private Vehicle GenerateRandomVehicle()
+
+    private static bool MatchesQuery(Vehicle v, VehicleQueryDto query)
     {
-        // Randomly select vehicle type (0-4)
-        var vehicleType = _random.Next(0, 5);
+        bool matches = true;
 
-        switch (vehicleType)
+        if (!string.IsNullOrWhiteSpace(query.Color))
         {
-            case 0:
-                return new Car(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: 4,
-                    fueltype: GetRandomFuel(),
-                    numberOfDoors: _random.Next(2, 5),
-                    type: GetRandomCarType());
-
-            case 1:
-                return new Motorcycle(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: 2,
-                    fueltype: GetRandomFuel(),
-                    type: GetRandomMotorcycleType(),
-                    engineDisplacement: _random.Next(50, 1300));
-
-            case 2:
-                return new Bus(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: 4,
-                    fueltype: FuelType.Diesel,
-                    numberOfSeats: _random.Next(10, 60),
-                    isDoubleDecker: _random.Next(0, 2) == 1);
-
-            case 3:
-                return new Boat(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: 0,
-                    fueltype: FuelType.None,
-                    type: GetRandomBoatType(),
-                    length: _random.Next(5, 40));
-
-            case 4:
-            default:
-                return new Airplane(
-                    registrationNumber: _garage.GenerateRegistrationNumber(),
-                    color: GetRandomColor(),
-                    wheels: _random.Next(2, 9),
-                    fueltype: FuelType.Gasoline,
-                    engines: _random.Next(1, 5),
-                    wingspan: _random.Next(10, 60));
+            matches &= v.Color.Equals(query.Color, StringComparison.OrdinalIgnoreCase);
         }
-    }
-    
-    private Vehicle? CreateVehicleType(int typeVehicle, string color, int wheels, FuelType fuelType)
-    {
-        // Create vehicle based on type selection with user-provided properties
-        Vehicle? vehicle = typeVehicle switch
+
+        if (query.Wheels.HasValue)
         {
-            1 => new Car(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, numberOfDoors: _random.Next(2, 5), GetRandomCarType()),
-            2 => new Motorcycle(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, GetRandomMotorcycleType(), _random.Next(50, 1300)),
-            3 => new Bus(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, _random.Next(10, 60), _random.Next(0, 2) == 1),
-            4 => new Boat(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, GetRandomBoatType(), _random.Next(5, 40)),
-            5 => new Airplane(_garage.GenerateRegistrationNumber(), color, wheels, fuelType, _random.Next(1, 5), _random.Next(10, 60)),
-            _ => null
-        };
+            matches &= v.Wheels == query.Wheels.Value;
+        }
 
-        return vehicle;
+        if (query.FuelType.HasValue)
+        {
+            matches &= v.FuelType == query.FuelType.Value;
+        }
+
+        if (query.VehicleType is not null)
+        {
+            matches &= v.GetType().Name.Equals(query.VehicleType.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Type specific filters
+
+        if (query.CarType.HasValue || query.NumberOfDoors is not null)
+        {
+            matches &= v is Car car
+                && (!query.CarType.HasValue || car.Type == query.CarType.Value)
+                && (query.NumberOfDoors is null || car.NumberOfDoors == query.NumberOfDoors.Value);
+        }
+
+
+        if (query.MotorcycleType.HasValue || query.EngineDisplacement is not null)
+        {
+            matches &= v is Motorcycle mc
+                && (!query.MotorcycleType.HasValue || mc.Type == query.MotorcycleType.Value)
+                && (query.EngineDisplacement is null || mc.EngineDisplacement == query.EngineDisplacement.Value);
+        }
+
+        if (query.NumberOfSeats is not null || query.IsDoubleDecker is not null)
+        {
+            matches &= v is Bus bus
+                && (query.NumberOfSeats is null || bus.NumberOfSeats == query.NumberOfSeats.Value)
+                && (query.IsDoubleDecker is null || bus.IsDoubleDecker == query.IsDoubleDecker.Value);
+        }
+
+        if (query.BoatType.HasValue || query.Length is not null)
+        {
+            matches &= v is Boat boat
+                && (!query.BoatType.HasValue || boat.Type == query.BoatType.Value)
+                && (query.Length is null || boat.Length == query.Length.Value);
+        }
+
+        if (query.Engines is not null || query.Wingspan is not null)
+        {
+            matches &= v is Airplane plane
+                && (query.Engines is null || plane.Engines == query.Engines.Value)
+                && (query.Wingspan is null || plane.Wingspan == query.Wingspan.Value);
+        }
+
+        return matches;
     }
 
-    private string GetRandomColor()
-    {
-        string[] colors = { "Red", "Blue", "Green", "Black", "White", "Yellow", "Pink" };
-        return colors[_random.Next(colors.Length)];
-    }
-
-    private FuelType GetRandomFuel()
-    {
-        FuelType[] fuels = { FuelType.Gasoline, FuelType.Diesel, FuelType.Hybrid, FuelType.Electric, FuelType.None };
-        return fuels[_random.Next(fuels.Length)];
-    }
-    
-    private CarType GetRandomCarType()
-    {
-        CarType[] carTypes = { CarType.Sedan, CarType.Van, CarType.SportsCar, CarType.Suv };
-        return carTypes[_random.Next(carTypes.Length)];
-    }
-    
-    private MotorcycleType GetRandomMotorcycleType()
-    {
-        MotorcycleType[] motorcycleTypes = { MotorcycleType.Motocross, MotorcycleType.Cruiser, MotorcycleType.Chopper, MotorcycleType.Sport };
-        return motorcycleTypes[_random.Next(motorcycleTypes.Length)];
-    }
-    
-    private BoatType GetRandomBoatType()
-    {
-        BoatType[] boatTypes = { BoatType.Sailboat, BoatType.Motorboat, BoatType.Yacht, BoatType.FishingBoat };
-        return boatTypes[_random.Next(boatTypes.Length)];
-    }
+    #endregion
 }

@@ -8,7 +8,7 @@ public class Airplane : Vehicle
     public int Wingspan { get; }
 
     public Airplane(string registrationNumber, string color, int wheels, FuelType fueltype, int engines, int wingspan)
-        : base(registrationNumber, color, wheels, fueltype)
+        : base(registrationNumber, color, 6, fueltype)
     {
         if (engines <= 0)
             throw new ArgumentOutOfRangeException(nameof(engines), "Number of engines must be greater than zero.");
