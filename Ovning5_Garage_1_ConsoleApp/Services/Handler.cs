@@ -1,11 +1,7 @@
-﻿using Microsoft.VisualBasic.FileIO;
-using Ovning5_Garage_1_ConsoleApp.DTOs;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
 using Ovning5_Garage_1_ConsoleApp.Enums;
 using Ovning5_Garage_1_ConsoleApp.Interfaces;
 using Ovning5_Garage_1_ConsoleApp.Vehicles;
-using System;
-using System.Drawing;
-using System.Reflection.Metadata.Ecma335;
 
 
 
@@ -59,7 +55,7 @@ public class Handler : IHandler
         }
 
         // Create the appropriate vehicle type based on user choice
-        Vehicle vehicle = _vehicleFactory.CreateFromDto(dto);
+        Vehicle vehicle = _vehicleFactory.CreateFromDto(dto, false);
 
         if (vehicle is null)
         {

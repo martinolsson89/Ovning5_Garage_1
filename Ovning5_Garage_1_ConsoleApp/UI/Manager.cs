@@ -127,10 +127,10 @@ public class Manager
     {
         try
         {
-            // Collect vehicle information from user
             _ui.ShowAddVehicleSubMenu();
             var dto = new VehicleDto();
 
+            // Collect vehicle information from user
             dto.VehicleType = (VehicleType)_ui.ReadIntInRange("Select menu option: ", 1, 5);
             dto.Color = _ui.ReadUserInput("Enter color: ");
             dto.FuelType = AskFuelType();
@@ -144,7 +144,7 @@ public class Manager
             {
                 case ParkResult.Success:
                     _ui.ShowMessage(
-                        $"\nVehicle parked successfully. Reg: {parkedVehicle!.RegistrationNumber}");
+                        $"\n{parkedVehicle?.GetType().Name} parked successfully! Reg: {parkedVehicle!.RegistrationNumber}");
                     break;
 
                 case ParkResult.AlreadyInGarage:
