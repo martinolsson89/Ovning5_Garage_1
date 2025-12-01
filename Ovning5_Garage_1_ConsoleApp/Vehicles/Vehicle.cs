@@ -1,4 +1,5 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 
 namespace Ovning5_Garage_1_ConsoleApp.Vehicles;
 
@@ -8,6 +9,8 @@ public abstract class Vehicle
     public string Color { get; protected set; }
     public int Wheels { get; protected set; }
     public FuelType FuelType { get; protected set; }
+
+    public abstract VehicleType VehicleType { get; }
 
     protected Vehicle(string registrationNumber, string color, int wheels, FuelType fuelType)
     {
@@ -32,5 +35,44 @@ public abstract class Vehicle
             FuelType
         );
     }
+
+    // Public entry point for matches
+    public bool Matches(VehicleQueryDto query)
+    {
+        if (!MatchesCommon(query))
+            return false;
+
+        return MatchesSpecific(query);
+    }
+
+    // Common filters for all vehicles
+    private bool MatchesCommon(VehicleQueryDto query)
+    {
+        if (!string.IsNullOrWhiteSpace(query.Color) &&
+            !Color.Equals(query.Color, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (query.Wheels.HasValue && Wheels != query.Wheels.Value)
+        {
+            return false;
+        }
+
+        if (query.FuelType.HasValue && FuelType != query.FuelType.Value)
+        {
+            return false;
+        }
+
+        if (query.VehicleType is not null && query.VehicleType != VehicleType)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Hook for subclasses
+    protected virtual bool MatchesSpecific(VehicleQueryDto query) => true;
 
 }

@@ -32,9 +32,10 @@ public class Handler : IHandler
             throw new ArgumentNullException(nameof(query));
         }
 
-        var results = _garage.GetVehicles(v => MatchesQuery(v, query));
+        // Filter matching vehicles
+        var matches = _garage.Where(v => v.Matches(query));
 
-        return results;
+        return matches;
     }
 
     public Vehicle? GetVehicleByRegNr(string regNr)
@@ -113,71 +114,6 @@ public class Handler : IHandler
         {
             yield return _vehicleFactory.CreateRandomVehicle();
         }
-    }
-
-    private static bool MatchesQuery(Vehicle v, VehicleQueryDto query)
-    {
-        bool matches = true;
-
-        if (!string.IsNullOrWhiteSpace(query.Color))
-        {
-            matches &= v.Color.Equals(query.Color, StringComparison.OrdinalIgnoreCase);
-        }
-
-        if (query.Wheels.HasValue)
-        {
-            matches &= v.Wheels == query.Wheels.Value;
-        }
-
-        if (query.FuelType.HasValue)
-        {
-            matches &= v.FuelType == query.FuelType.Value;
-        }
-
-        if (query.VehicleType is not null)
-        {
-            matches &= v.GetType().Name.Equals(query.VehicleType.ToString(), StringComparison.OrdinalIgnoreCase);
-        }
-
-        // Type specific filters
-
-        if (query.CarType.HasValue || query.NumberOfDoors is not null)
-        {
-            matches &= v is Car car
-                && (!query.CarType.HasValue || car.Type == query.CarType.Value)
-                && (query.NumberOfDoors is null || car.NumberOfDoors == query.NumberOfDoors.Value);
-        }
-
-
-        if (query.MotorcycleType.HasValue || query.EngineDisplacement is not null)
-        {
-            matches &= v is Motorcycle mc
-                && (!query.MotorcycleType.HasValue || mc.Type == query.MotorcycleType.Value)
-                && (query.EngineDisplacement is null || mc.EngineDisplacement == query.EngineDisplacement.Value);
-        }
-
-        if (query.NumberOfSeats is not null || query.IsDoubleDecker is not null)
-        {
-            matches &= v is Bus bus
-                && (query.NumberOfSeats is null || bus.NumberOfSeats == query.NumberOfSeats.Value)
-                && (query.IsDoubleDecker is null || bus.IsDoubleDecker == query.IsDoubleDecker.Value);
-        }
-
-        if (query.BoatType.HasValue || query.Length is not null)
-        {
-            matches &= v is Boat boat
-                && (!query.BoatType.HasValue || boat.Type == query.BoatType.Value)
-                && (query.Length is null || boat.Length == query.Length.Value);
-        }
-
-        if (query.Engines is not null || query.Wingspan is not null)
-        {
-            matches &= v is Airplane plane
-                && (query.Engines is null || plane.Engines == query.Engines.Value)
-                && (query.Wingspan is null || plane.Wingspan == query.Wingspan.Value);
-        }
-
-        return matches;
     }
 
     #endregion

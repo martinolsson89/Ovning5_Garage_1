@@ -1,4 +1,5 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 
 namespace Ovning5_Garage_1_ConsoleApp.Vehicles;
 
@@ -6,6 +7,9 @@ public class Bus : Vehicle
 {
     public int NumberOfSeats { get; }
     public bool IsDoubleDecker { get; } = false;
+
+    public override VehicleType VehicleType => VehicleType.Bus;
+
     public Bus(string registrationNumber, string color, int wheels, FuelType fueltype, int numberOfSeats, bool isDoubleDecker)
         : base(registrationNumber, color, 4, fueltype)
     {
@@ -27,5 +31,18 @@ public class Bus : Vehicle
             NumberOfSeats,
             IsDoubleDecker ? "Yes" : "No"
         );
+    }
+
+    protected override bool MatchesSpecific(VehicleQueryDto query)
+    {
+        if (query.NumberOfSeats is not null &&
+            NumberOfSeats != query.NumberOfSeats.Value)
+            return false;
+
+        if (query.IsDoubleDecker is not null &&
+            IsDoubleDecker != query.IsDoubleDecker.Value)
+            return false;
+
+        return true;
     }
 }

@@ -246,6 +246,7 @@ public class Manager
             Wheels = wheels,
             FuelType = fuelType
         };
+
         // Optional type-specific filters if a type was chosen
         if (vehicleType is not null)
         {
@@ -253,7 +254,6 @@ public class Manager
         }
 
         // Search garage with the provided criteria
-        //var results = _handler.GetVehicles(vehicleType, color, wheels, fuelType);
         var results = _handler.GetVehicles(query);
 
         // Display search results

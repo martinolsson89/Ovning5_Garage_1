@@ -1,4 +1,5 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 
 namespace Ovning5_Garage_1_ConsoleApp.Vehicles;
 
@@ -6,6 +7,8 @@ public class Motorcycle : Vehicle
 {
     public MotorcycleType Type { get; }
     public int EngineDisplacement { get; }
+
+    public override VehicleType VehicleType => VehicleType.Motorcycle;
     public Motorcycle(string registrationNumber, string color, int wheels, FuelType fueltype, MotorcycleType type, int engineDisplacement)
         : base(registrationNumber, color, 2, fueltype)
     {
@@ -27,5 +30,17 @@ public class Motorcycle : Vehicle
             $"{EngineDisplacement} cc",
             Type
         );
+    }
+
+    protected override bool MatchesSpecific(VehicleQueryDto query)
+    {
+        if (query.MotorcycleType.HasValue && Type != query.MotorcycleType.Value)
+            return false;
+
+        if (query.EngineDisplacement is not null &&
+            EngineDisplacement != query.EngineDisplacement.Value)
+            return false;
+
+        return true;
     }
 }

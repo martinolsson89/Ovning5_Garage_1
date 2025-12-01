@@ -1,4 +1,5 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 
 namespace Ovning5_Garage_1_ConsoleApp.Vehicles;
 
@@ -6,6 +7,7 @@ public class Car : Vehicle
 {
     public int NumberOfDoors { get; }
     public CarType Type { get; }
+    public override VehicleType VehicleType => VehicleType.Car;
 
     public Car(string registrationNumber, string color, int wheels, FuelType fueltype, int numberOfDoors, CarType type)
         : base(registrationNumber, color, 4, fueltype)
@@ -28,5 +30,17 @@ public class Car : Vehicle
             NumberOfDoors,
             Type
         );
+    }
+
+    protected override bool MatchesSpecific(VehicleQueryDto query)
+    {
+        // Only apply filters that are actually set
+        if (query.CarType.HasValue && Type != query.CarType.Value)
+            return false;
+
+        if (query.NumberOfDoors is not null && NumberOfDoors != query.NumberOfDoors.Value)
+            return false;
+
+        return true;
     }
 }

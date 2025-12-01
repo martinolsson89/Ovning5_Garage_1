@@ -1,4 +1,5 @@
-﻿using Ovning5_Garage_1_ConsoleApp.Enums;
+﻿using Ovning5_Garage_1_ConsoleApp.DTOs;
+using Ovning5_Garage_1_ConsoleApp.Enums;
 
 namespace Ovning5_Garage_1_ConsoleApp.Vehicles;
 
@@ -6,6 +7,8 @@ public class Airplane : Vehicle
 {
     public int Engines { get; }
     public int Wingspan { get; }
+
+    public override VehicleType VehicleType => VehicleType.Airplane;
 
     public Airplane(string registrationNumber, string color, int wheels, FuelType fueltype, int engines, int wingspan)
         : base(registrationNumber, color, 6, fueltype)
@@ -30,5 +33,16 @@ public class Airplane : Vehicle
             Engines,
             $"{Wingspan} m"
         );
+    }
+
+    protected override bool MatchesSpecific(VehicleQueryDto query)
+    {
+        if (query.Engines is not null && Engines != query.Engines.Value)
+            return false;
+
+        if (query.Wingspan is not null && Wingspan != query.Wingspan.Value)
+            return false;
+
+        return true;
     }
 }
